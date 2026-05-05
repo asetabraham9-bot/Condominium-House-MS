@@ -13,11 +13,9 @@ A comprehensive web-based platform for managing condominium housing allocation, 
 - [Features](#features)
 - [Technology Stack](#technology-stack)
 - [User Roles](#user-roles)
-- [Demo Accounts](#demo-accounts)
 - [System Architecture](#system-architecture)
 - [Scoring Algorithm](#scoring-algorithm)
 - [Screenshots](#screenshots)
-- [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
 
