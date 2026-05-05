@@ -12,7 +12,6 @@ A comprehensive web-based platform for managing condominium housing allocation, 
 - [Overview](#overview)
 - [Features](#features)
 - [Technology Stack](#technology-stack)
-- [Getting Started](#getting-started)
 - [User Roles](#user-roles)
 - [Demo Accounts](#demo-accounts)
 - [System Architecture](#system-architecture)
@@ -75,44 +74,6 @@ OCHMS is designed to replace the manual condominium management process at Wolait
 - **Vite** 6.3.5 - Build tool
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+ installed
-- npm or pnpm package manager
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd ochms
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   pnpm install
-   ```
-
-3. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open in browser**
-   ```
-   http://localhost:5173
-   ```
-
-### Build for Production
-
-```bash
-npm run build
-```
 
 ## 👥 User Roles
 
@@ -190,16 +151,6 @@ Full system overview with statistics, pending actions, and quick access to manag
 ### Lottery System
 Fair, transparent lottery draw interface with score-based selection.
 
-## 📚 Documentation
-
-Comprehensive documentation available in `/SYSTEM_DOCUMENTATION.md` including:
-
-- Detailed user guides for each role
-- Complete API documentation
-- Business rules and policies
-- Troubleshooting guide
-- Security and privacy information
-
 ## 🗂️ Project Structure
 
 ```
@@ -255,12 +206,11 @@ ochms/
 
 ## 🌟 Key Highlights
 
-- **No Backend Required**: Fully functional frontend with Context API
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **Real-time Updates**: Instant UI updates with state changes
 - **Comprehensive**: All SRS requirements implemented
 - **User-Friendly**: Intuitive interface for all user types
-- **Extensible**: Easy to add features and integrate backend
+- **Extensible**: Easy to add features
 
 ## 📝 Business Rules
 
@@ -270,27 +220,14 @@ ochms/
 - Application scoring: **Automated and transparent**
 - Lottery selection: **Score-based ranking**
 
-## 🚧 Future Enhancements
+## 🚧 Future Enhancement
 
-- [ ] Backend API integration (MySQL)
 - [ ] Email notification system
 - [ ] SMS notifications
-- [ ] Document upload functionality
 - [ ] Online payment gateway
 - [ ] Mobile application
 - [ ] Advanced analytics dashboard
 - [ ] Multi-language support
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
 ## 📄 License
 
 This project is developed for Wolaita Sodo University.
@@ -303,7 +240,6 @@ Developed based on Software Requirements Specification (SRS) for the Online Cond
 
 For support, email asetabraham9@gmail.com, support@wsu.edu or contact the IT department (phone: +251 964 063 992).
 
----
 
 **© 2026 Wolaita Sodo University - All Rights Reserved**
 
