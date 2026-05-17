@@ -2,10 +2,6 @@
 
 A comprehensive web-based platform for managing condominium housing allocation, applications, and resident services at Wolaita Sodo University.
 
-![OCHMS](https://img.shields.io/badge/OCHMS-v1.0.0-blue)
-![React](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)
-![Tailwind](https://img.shields.io/badge/Tailwind-4.1.12-38B2AC?logo=tailwind-css)
 
 ## 📋 Table of Contents
 

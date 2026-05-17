@@ -30,15 +30,35 @@ if(
     !empty($data->firstName) &&
     !empty($data->lastName) &&
     !empty($data->email) &&
-    !empty($data->password) &&
-    !empty($data->campusId)
+    !empty($data->password)
 ){
-    try {
-        $db->beginTransaction();
+    // Validation
+    if (!filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(array("message" => "Invalid email format."));
+        exit();
+    }
 
-        // 1. Insert into Users table
-        $query = "INSERT INTO users (`first_name`, `last_name`, `email`, `password_hash`, `phone_number`, `role`, `campus_id`) 
-                  VALUES (:fname, :lname, :email, :password, :phone, 'applicant', :campus)";
+    if (strlen($data->password) < 8 || 
+        !preg_match("/[A-Z]/", $data->password) || 
+        !preg_match("/[a-z]/", $data->password) || 
+        !preg_match("/[0-9]/", $data->password) || 
+        !preg_match("/[^A-Za-z0-9]/", $data->password)) {
+        http_response_code(400);
+        echo json_encode(array("message" => "Password must be at least 8 characters long and contain upper case, lower case, numbers, and special characters."));
+        exit();
+    }
+
+    if (!is_string($data->firstName) || !is_string($data->lastName)) {
+        http_response_code(400);
+        echo json_encode(array("message" => "First name and last name must be strings."));
+        exit();
+    }
+
+    try {
+        // Insert into Users table
+        $query = "INSERT INTO users (`first_name`, `last_name`, `email`, `password_hash`, `role`) 
+                  VALUES (:fname, :lname, :email, :password, 'applicant')";
         $stmt = $db->prepare($query);
 
         $password_hash = password_hash($data->password, PASSWORD_BCRYPT);
@@ -47,64 +67,27 @@ if(
         $stmt->bindParam(":lname", $data->lastName);
         $stmt->bindParam(":email", $data->email);
         $stmt->bindParam(":password", $password_hash);
-        $phone = isset($data->phone) ? $data->phone : null;
-        $stmt->bindParam(":phone", $phone);
-        $stmt->bindParam(":campus", $data->campusId);
 
-        $stmt->execute();
-        $user_id = $db->lastInsertId();
+        if($stmt->execute()){
+            $user_id = $db->lastInsertId();
 
-        // 2. Insert into applicant_details table
-        $query2 = "INSERT INTO applicant_details 
-                   (`user_id`, `gender`, `academic_level`, `years_of_service`, `marital_status`, `job_responsibility`, `is_disabled`, `score`) 
-                   VALUES 
-                   (:uid, :gender, :academic, :years, :marital_status, :job, :disabled, 0)";
-        $stmt2 = $db->prepare($query2);
-
-        $stmt2->bindParam(":uid", $user_id);
-        $gender = isset($data->gender) ? $data->gender : null;
-        $academic = isset($data->academicLevel) ? $data->academicLevel : null;
-        $years = isset($data->yearsOfService) ? $data->yearsOfService : 0;
-        $marital = isset($data->maritalStatus) ? $data->maritalStatus : null;
-        $job = isset($data->jobResponsibility) ? $data->jobResponsibility : null;
-        $disabled = isset($data->isDisabled) && $data->isDisabled ? 1 : 0;
-
-        $stmt2->bindParam(":gender", $gender);
-        $stmt2->bindParam(":academic", $academic);
-        $stmt2->bindParam(":years", $years);
-        $stmt2->bindParam(":marital_status", $marital);
-        $stmt2->bindParam(":job", $job);
-        $stmt2->bindParam(":disabled", $disabled);
-
-        $stmt2->execute();
-        
-        // Fetch campus name for response
-        $cQuery = "SELECT `name` FROM campuses WHERE `id` = :cid";
-        $cStmt = $db->prepare($cQuery);
-        $cStmt->execute([':cid' => $data->campusId]);
-        $cRow = $cStmt->fetch(PDO::FETCH_ASSOC);
-        $campusName = $cRow ? $cRow['name'] : null;
-
-        $db->commit();
-
-        http_response_code(201);
-        echo json_encode(array(
-            "message" => "Registration successful.",
-            "user" => array(
-                "id" => (string)$user_id,
-                "firstName" => $data->firstName,
-                "lastName" => $data->lastName,
-                "email" => $data->email,
-                "role" => "applicant",
-                "campusId" => (string)$data->campusId,
-                "campusName" => $campusName
-            )
-        ));
+            http_response_code(201);
+            echo json_encode(array(
+                "message" => "Registration successful.",
+                "user" => array(
+                    "id" => (string)$user_id,
+                    "firstName" => $data->firstName,
+                    "lastName" => $data->lastName,
+                    "email" => $data->email,
+                    "role" => "applicant"
+                )
+            ));
+        } else {
+            http_response_code(503);
+            echo json_encode(array("message" => "Unable to register user."));
+        }
 
     } catch (Exception $e) {
-        if ($db->inTransaction()) {
-            $db->rollBack();
-        }
         $msg = $e->getMessage();
         if (strpos($msg, 'Duplicate') !== false || strpos($msg, '1062') !== false) {
             http_response_code(409);

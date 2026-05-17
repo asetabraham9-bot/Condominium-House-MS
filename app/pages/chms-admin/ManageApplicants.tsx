@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, Fragment } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
@@ -16,6 +16,7 @@ export default function ManageApplicants() {
   const { applications, refreshData } = useData();
   const navigate = useNavigate();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || user.role !== 'chms_admin') {
@@ -94,7 +95,8 @@ export default function ManageApplicants() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {applications.map((app) => (
-                    <tr key={app.applicantId} className="hover:bg-gray-50">
+                    <Fragment key={app.applicantId}>
+                    <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setExpandedId(expandedId === app.applicantId ? null : app.applicantId)}>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">{app.applicantName}</td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {app.cycleTitle ?? '—'}
@@ -124,7 +126,7 @@ export default function ManageApplicants() {
                           }
                         />
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
                         <div className="flex flex-col gap-2 max-w-[240px]">
                           <label className="text-xs text-gray-500 uppercase tracking-wide">
                             Application status (default pending)
@@ -167,6 +169,35 @@ export default function ManageApplicants() {
                         </div>
                       </td>
                     </tr>
+                    {expandedId === app.applicantId && (
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <td colSpan={8} className="px-4 py-4">
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <span className="block text-gray-500 font-medium">Job Responsibility</span>
+                              <span className="text-gray-900">{app.jobResponsibility}</span>
+                            </div>
+                            <div>
+                              <span className="block text-gray-500 font-medium">Marital Status</span>
+                              <span className="text-gray-900">{app.maritalStatus}</span>
+                            </div>
+                            <div>
+                              <span className="block text-gray-500 font-medium">Children Count</span>
+                              <span className="text-gray-900">{app.childrenCount ?? 0}</span>
+                            </div>
+                            <div>
+                              <span className="block text-gray-500 font-medium">Disability Status</span>
+                              <span className="text-gray-900">{app.isDisabled ? 'Yes' : 'No'}</span>
+                            </div>
+                            <div className="col-span-2">
+                                <span className="block text-gray-500 font-medium">Additional Info</span>
+                                <span className="text-gray-900">Score exactly calculated based on matrix. Double check logic in scoreCalculator.ts if anomalies.</span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>

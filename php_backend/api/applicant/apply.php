@@ -16,9 +16,11 @@ $data = json_decode(file_get_contents("php://input"));
 
 if(
     !empty($data->userId) &&
+    isset($data->gender) &&
     isset($data->academicLevel) &&
     isset($data->yearsOfService) &&
     isset($data->maritalStatus) &&
+    isset($data->childrenCount) &&
     isset($data->jobResponsibility) &&
     isset($data->score)
 ){
@@ -67,9 +69,11 @@ if(
         // 3. Update the record
         $query = "UPDATE `applicant_details` 
                   SET 
+                    `gender` = :gender,
                     `academic_level` = :academic,
                     `years_of_service` = :years,
                     `marital_status` = :marital,
+                    `children_count` = :children_count,
                     `job_responsibility` = :job,
                     `is_disabled` = :disabled,
                     `score` = :score,
@@ -79,9 +83,11 @@ if(
 
         $stmt = $db->prepare($query);
 
+        $stmt->bindValue(":gender", $data->gender);
         $stmt->bindValue(":academic", $data->academicLevel);
         $stmt->bindValue(":years", (int)$data->yearsOfService, PDO::PARAM_INT);
         $stmt->bindValue(":marital", $data->maritalStatus);
+        $stmt->bindValue(":children_count", (int)$data->childrenCount, PDO::PARAM_INT);
         $stmt->bindValue(":job", $data->jobResponsibility);
         $stmt->bindValue(":disabled", (!empty($data->isDisabled) ? 1 : 0), PDO::PARAM_INT);
         $stmt->bindValue(":score", (int)$data->score, PDO::PARAM_INT);

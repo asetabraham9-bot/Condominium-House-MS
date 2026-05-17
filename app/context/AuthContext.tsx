@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '../lib/apiBase';
 
-export type UserRole = 'applicant' | 'campus_admin' | 'chms_admin';
+export type UserRole = 'applicant' | 'campus_admin' | 'chms_admin' | 'manager';
 
 export interface User {
   id: string;

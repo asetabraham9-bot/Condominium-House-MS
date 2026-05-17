@@ -14,6 +14,8 @@ import ManageBlocks from "./pages/campus-admin/ManageBlocks";
 import ManageResidents from "./pages/campus-admin/ManageResidents";
 import VerifyPayments from "./pages/campus-admin/VerifyPayments";
 import ResidentRequests from "./pages/campus-admin/ResidentRequests";
+import ViewFeedback from "./pages/campus-admin/ViewFeedback";
+import ManageRequests from "./pages/campus-admin/ManageRequests";
 import CampusReports from "./pages/campus-admin/Reports";
 import CHMSAdminDashboard from "./pages/chms-admin/Dashboard";
 import ManageApplicants from "./pages/chms-admin/ManageApplicants";
@@ -27,6 +29,8 @@ import ManageCampus from "./pages/chms-admin/ManageCampus";
 import LaunchCycle from "./pages/chms-admin/LaunchCycle";
 import CampusAdminSettings from "./pages/campus-admin/Settings";
 import ChmsAdminSettings from "./pages/chms-admin/Settings";
+import ManagerDashboard from "./pages/manager/Dashboard";
+import ManagerCampusInfo from "./pages/manager/CampusInfo";
 
 export const router = createBrowserRouter([
   {
@@ -140,5 +144,13 @@ export const router = createBrowserRouter([
   {
     path: "/chms-admin/settings",
     Component: ChmsAdminSettings,
+  },
+  {
+    path: "/manager/dashboard",
+    Component: ManagerDashboard,
+  },
+  {
+    path: "/manager/campus-info",
+    Component: ManagerCampusInfo,
   },
 ]);

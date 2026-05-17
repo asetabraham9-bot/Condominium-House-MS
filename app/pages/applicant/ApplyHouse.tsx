@@ -40,9 +40,11 @@ export default function ApplyHouse() {
   const canApply = Boolean(openCycle && deadlineOk);
 
   const [formData, setFormData] = useState({
+    gender: user?.gender || '',
     academicLevel: user?.academicLevel || '',
     yearsOfService: user?.yearsOfService || 0,
     maritalStatus: user?.maritalStatus || '',
+    childrenCount: 0,
     jobResponsibility: user?.jobResponsibility || '',
     isDisabled: user?.isDisabled || false,
   });
@@ -99,9 +101,11 @@ export default function ApplyHouse() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
+          gender: formData.gender,
           academicLevel: formData.academicLevel,
           yearsOfService: formData.yearsOfService,
           maritalStatus: formData.maritalStatus,
+          childrenCount: formData.childrenCount,
           jobResponsibility: formData.jobResponsibility,
           isDisabled: formData.isDisabled,
           score: currentScore,
@@ -452,6 +456,21 @@ export default function ApplyHouse() {
                 <div className="space-y-5">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Gender <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition mb-5"
+                    >
+                      <option value="">Select gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
                       Academic level <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -462,10 +481,13 @@ export default function ApplyHouse() {
                       className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition"
                     >
                       <option value="">Select level</option>
-                      <option value="Bachelor">Bachelor (25 points)</option>
-                      <option value="Masters">Masters (35 points)</option>
-                      <option value="PhD">PhD (45 points)</option>
-                      <option value="Professor">Professor (50 points)</option>
+                      <option value="Professor">Professor</option>
+                      <option value="Assistant Professor">Assistant Professor</option>
+                      <option value="PhD">PhD</option>
+                      <option value="Masters">Masters</option>
+                      <option value="Bachelor">Bachelor</option>
+                      <option value="Diploma">Diploma</option>
+                      <option value="Certificate">Certificate</option>
                     </select>
                   </div>
 
@@ -496,11 +518,28 @@ export default function ApplyHouse() {
                         className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500"
                       >
                         <option value="">Select</option>
-                        <option value="Single">Single (5 points)</option>
-                        <option value="Married">Married (10 points)</option>
-                        <option value="Divorced">Divorced (7 points)</option>
-                        <option value="Widowed">Widowed (7 points)</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Divorced">Divorced</option>
+                        <option value="Widowed">Widowed</option>
                       </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Number of children <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        name="childrenCount"
+                        value={formData.childrenCount}
+                        onChange={handleChange}
+                        required
+                        min={0}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500"
+                      />
                     </div>
                   </div>
 
@@ -516,11 +555,11 @@ export default function ApplyHouse() {
                       className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="">Select</option>
-                      <option value="Lecturer">Lecturer (10 points)</option>
-                      <option value="Assistant Lecturer">Assistant Lecturer (8 points)</option>
-                      <option value="Senior Lecturer">Senior Lecturer (12 points)</option>
-                      <option value="Department Head">Department Head (14 points)</option>
-                      <option value="Dean">Dean (15 points)</option>
+                      <option value="Dean">Dean</option>
+                      <option value="Department Head">Department Head</option>
+                      <option value="Lecturer">Lecturer</option>
+                      <option value="Assistant Lecturer">Assistant Lecturer</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
 

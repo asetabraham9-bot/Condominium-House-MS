@@ -1,12 +1,13 @@
 /**
- * Utility functions for calculating applicant scores based on OCHMS criteria
+ * Utility functions for calculating applicant scores based on CHMS criteria
  * 
  * Scoring System:
- * - Academic Level: 50%
- * - Years of Service: 25%
- * - Job Responsibility: 15%
+ * - Academic Level & Job Responsibility: 60%
  * - Marital Status: 10%
- * - Disability Bonus (Female): +10%
+ * - Years of Service: 15%
+ * - Disability: 15%
+ * 
+ * Total: 100%
  */
 
 export interface ApplicantData {
@@ -14,45 +15,34 @@ export interface ApplicantData {
   yearsOfService: number;
   jobResponsibility: string;
   maritalStatus: string;
+  childrenCount: number;
   isDisabled: boolean;
   gender?: string;
 }
 
 const ACADEMIC_SCORES: Record<string, number> = {
+  'Professor': 45,
+  'Assistant Professor': 40,
+  'PhD': 35,
+  'Masters': 30,
   'Bachelor': 25,
-  'Masters': 35,
-  'PhD': 45,
-  'Professor': 50,
+  'Diploma': 20,
+  'Certificate': 15,
 };
 
 const JOB_SCORES: Record<string, number> = {
-  'Lecturer': 10,
-  'Assistant Lecturer': 8,
-  'Senior Lecturer': 12,
-  'Department Head': 14,
   'Dean': 15,
-};
-
-const MARITAL_SCORES: Record<string, number> = {
-  'Single': 5,
-  'Married': 10,
-  'Divorced': 7,
-  'Widowed': 7,
+  'Department Head': 13,
+  'Lecturer': 11,
+  'Assistant Lecturer': 9,
+  'Other': 7,
 };
 
 /**
- * Calculate academic level score (max 50 points)
+ * Calculate academic level score (max 45 points)
  */
 export function calculateAcademicScore(academicLevel: string): number {
   return ACADEMIC_SCORES[academicLevel] || 0;
-}
-
-/**
- * Calculate years of service score (max 25 points)
- * 2.5 points per year, capped at 25 points (10+ years)
- */
-export function calculateServiceScore(years: number): number {
-  return Math.min(years * 2.5, 25);
 }
 
 /**
@@ -65,15 +55,33 @@ export function calculateJobScore(jobResponsibility: string): number {
 /**
  * Calculate marital status score (max 10 points)
  */
-export function calculateMaritalScore(maritalStatus: string): number {
-  return MARITAL_SCORES[maritalStatus] || 0;
+export function calculateMaritalScore(maritalStatus: string, childrenCount: number): number {
+  switch (maritalStatus) {
+    case 'Single':
+      return 1;
+    case 'Married':
+      return Math.min(3 + childrenCount, 10);
+    case 'Divorced':
+    case 'Widowed':
+      return Math.min(1 + childrenCount, 10);
+    default:
+      return 0;
+  }
 }
 
 /**
- * Calculate disability bonus (10 points for female staff)
+ * Calculate years of service score (max 15 points)
+ * 1 point per year, capped at 15
  */
-export function calculateDisabilityBonus(isDisabled: boolean, gender?: string): number {
-  return isDisabled && gender === 'Female' ? 10 : 0;
+export function calculateServiceScore(years: number): number {
+  return Math.min(years, 15);
+}
+
+/**
+ * Calculate disability score (15 points)
+ */
+export function calculateDisabilityScore(isDisabled: boolean): number {
+  return isDisabled ? 15 : 0;
 }
 
 /**
@@ -81,12 +89,12 @@ export function calculateDisabilityBonus(isDisabled: boolean, gender?: string): 
  */
 export function calculateTotalScore(applicant: ApplicantData): number {
   const academicScore = calculateAcademicScore(applicant.academicLevel);
-  const serviceScore = calculateServiceScore(applicant.yearsOfService);
   const jobScore = calculateJobScore(applicant.jobResponsibility);
-  const maritalScore = calculateMaritalScore(applicant.maritalStatus);
-  const disabilityBonus = calculateDisabilityBonus(applicant.isDisabled, applicant.gender);
+  const maritalScore = calculateMaritalScore(applicant.maritalStatus, applicant.childrenCount);
+  const serviceScore = calculateServiceScore(applicant.yearsOfService);
+  const disabilityScore = calculateDisabilityScore(applicant.isDisabled);
 
-  return Math.round(academicScore + serviceScore + jobScore + maritalScore + disabilityBonus);
+  return Math.round(academicScore + jobScore + maritalScore + serviceScore + disabilityScore);
 }
 
 /**
@@ -96,13 +104,8 @@ export function getScoreBreakdown(applicant: ApplicantData) {
   return {
     academic: {
       value: calculateAcademicScore(applicant.academicLevel),
-      max: 50,
-      percentage: '50%',
-    },
-    service: {
-      value: calculateServiceScore(applicant.yearsOfService),
-      max: 25,
-      percentage: '25%',
+      max: 45,
+      percentage: '45%',
     },
     job: {
       value: calculateJobScore(applicant.jobResponsibility),
@@ -110,14 +113,19 @@ export function getScoreBreakdown(applicant: ApplicantData) {
       percentage: '15%',
     },
     marital: {
-      value: calculateMaritalScore(applicant.maritalStatus),
+      value: calculateMaritalScore(applicant.maritalStatus, applicant.childrenCount),
       max: 10,
       percentage: '10%',
     },
+    service: {
+      value: calculateServiceScore(applicant.yearsOfService),
+      max: 15,
+      percentage: '15%',
+    },
     disability: {
-      value: calculateDisabilityBonus(applicant.isDisabled, applicant.gender),
-      max: 10,
-      percentage: '+10%',
+      value: calculateDisabilityScore(applicant.isDisabled),
+      max: 15,
+      percentage: '15%',
     },
     total: calculateTotalScore(applicant),
   };

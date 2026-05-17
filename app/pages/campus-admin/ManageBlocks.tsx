@@ -11,6 +11,7 @@ const HOUSE_TYPE_LABEL: Record<string, string> = {
   studio: 'Studio',
   one_bedroom: 'One Bedroom',
   two_bedroom: 'Two Bedroom',
+  three_bedroom: 'Three Bedroom',
 };
 
 export default function ManageBlocks() {
@@ -41,8 +42,8 @@ export default function ManageBlocks() {
     bedrooms: 2,
     bathrooms: 1,
     monthlyPayment: 0,
-    electricService: true,
-    waterService: true,
+    electricService: 'yes',
+    waterService: 'yes',
   });
 
   useEffect(() => {
@@ -69,8 +70,8 @@ export default function ManageBlocks() {
       bedrooms: 2,
       bathrooms: 1,
       monthlyPayment: 0,
-      electricService: true,
-      waterService: true,
+      electricService: 'yes',
+      waterService: 'yes',
     });
     setShowHouseModal(true);
   };
@@ -170,8 +171,8 @@ export default function ManageBlocks() {
         fd.append('monthly_payment', String(houseData.monthlyPayment || 0));
         fd.append('bedrooms', String(houseData.bedrooms || 0));
         fd.append('bathrooms', String(houseData.bathrooms || 0));
-        fd.append('electric_service', houseData.electricService ? 'true' : 'false');
-        fd.append('water_service', houseData.waterService ? 'true' : 'false');
+        fd.append('electric_service', houseData.electricService || 'yes');
+        fd.append('water_service', houseData.waterService || 'yes');
 
         res = await fetch(url, {
           method: 'POST',
@@ -378,12 +379,12 @@ export default function ManageBlocks() {
                                 <div className="flex justify-between col-span-2 mt-1 pt-2 border-t border-gray-200">
                                   <div className="flex gap-4">
                                     <span className="flex items-center gap-1">
-                                      {house.electricService ? <Check className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-400" />} 
-                                      <span className="text-xs font-medium">Power</span>
+                                      {house.electricService === 'yes' ? <Check className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-400" />} 
+                                      <span className="text-xs font-medium">Power: {house.electricService}</span>
                                     </span>
                                     <span className="flex items-center gap-1">
-                                      {house.waterService ? <Check className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-400" />} 
-                                      <span className="text-xs font-medium">Water</span>
+                                      {house.waterService === 'yes' ? <Check className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-400" />} 
+                                      <span className="text-xs font-medium">Water: {house.waterService}</span>
                                     </span>
                                   </div>
                                 </div>
@@ -477,6 +478,7 @@ export default function ManageBlocks() {
                         <option value="studio">Studio</option>
                         <option value="one_bedroom">One Bedroom</option>
                         <option value="two_bedroom">Two Bedroom</option>
+                        <option value="three_bedroom">Three Bedroom</option>
                       </select>
                     </div>
                   </div>
@@ -515,25 +517,31 @@ export default function ManageBlocks() {
                     />
                   </div>
 
-                  <div className="flex gap-6 pt-2 pb-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={!!houseData.electricService}
-                        onChange={(e) => setHouseData({ ...houseData, electricService: e.target.checked })}
-                        className="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                      />
-                      <span className="text-sm font-medium text-gray-800">Electric Service</span>
-                    </label>
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={!!houseData.waterService}
-                        onChange={(e) => setHouseData({ ...houseData, waterService: e.target.checked })}
-                        className="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                      />
-                      <span className="text-sm font-medium text-gray-800">Water Service</span>
-                    </label>
+                  <div className="grid grid-cols-2 gap-5 pt-2 pb-2">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Electric Service</label>
+                      <select
+                        value={houseData.electricService || 'yes'}
+                        onChange={(e) => setHouseData({ ...houseData, electricService: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 focus:bg-white"
+                      >
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="requires maintenance">Requires Maintenance</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Water Service</label>
+                      <select
+                        value={houseData.waterService || 'yes'}
+                        onChange={(e) => setHouseData({ ...houseData, waterService: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 focus:bg-white"
+                      >
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="requires maintenance">Requires Maintenance</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="pt-4 flex gap-3 border-t border-gray-100">

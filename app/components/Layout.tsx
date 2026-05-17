@@ -20,7 +20,7 @@ import {
 
 interface LayoutProps {
   children: ReactNode;
-  role: 'applicant' | 'campus_admin' | 'chms_admin';
+  role: 'applicant' | 'campus_admin' | 'chms_admin' | 'manager';
 }
 
 export default function Layout({ children, role }: LayoutProps) {
@@ -66,11 +66,18 @@ export default function Layout({ children, role }: LayoutProps) {
     { icon: Settings, label: 'Settings', path: '/chms-admin/settings' },
   ];
 
+  const managerMenuItems = [
+    { icon: Home, label: 'Dashboard', path: '/manager/dashboard' },
+    { icon: Building2, label: 'Campus Information', path: '/manager/campus-info' },
+  ];
+
   const menuItems =
     role === 'applicant'
       ? applicantMenuItems
       : role === 'campus_admin'
       ? campusAdminMenuItems
+      : role === 'manager'
+      ? managerMenuItems
       : chmsAdminMenuItems;
 
   const roleTitle =
@@ -78,6 +85,8 @@ export default function Layout({ children, role }: LayoutProps) {
       ? 'Applicant Portal'
       : role === 'campus_admin'
       ? 'Campus Admin'
+      : role === 'manager'
+      ? 'Manager'
       : 'CHMS Admin';
 
   return (

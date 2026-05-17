@@ -31,8 +31,8 @@ if(!empty($data->id) && !empty($data->houseNumber)){
         ':mpayment' => isset($data->monthlyPayment) ? $data->monthlyPayment : 0.00,
         ':beds' => isset($data->bedrooms) ? $data->bedrooms : 0,
         ':baths' => isset($data->bathrooms) ? $data->bathrooms : 0,
-        ':eservice' => isset($data->electricService) && $data->electricService ? 1 : 0,
-        ':wservice' => isset($data->waterService) && $data->waterService ? 1 : 0,
+        ':eservice' => isset($data->electricService) ? $data->electricService : 'yes',
+        ':wservice' => isset($data->waterService) ? $data->waterService : 'yes',
         ':id' => $data->id
     ];
 

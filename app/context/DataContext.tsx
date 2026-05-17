@@ -11,6 +11,7 @@ export interface Application {
   academicLevel: string;
   yearsOfService: number;
   maritalStatus: string;
+  childrenCount?: number;
   jobResponsibility: string;
   isDisabled: boolean;
   applicantName: string;
@@ -78,7 +79,7 @@ export interface House {
   id: string;
   blockId: string;
   houseNumber: string;
-  houseType: 'studio' | 'one_bedroom' | 'two_bedroom';
+  houseType: 'studio' | 'one_bedroom' | 'two_bedroom' | 'three_bedroom';
   status: 'available' | 'occupied' | 'maintenance';
   blockName?: string;
   campusId?: string;
@@ -87,8 +88,8 @@ export interface House {
   monthlyPayment?: number;
   bedrooms?: number;
   bathrooms?: number;
-  electricService?: boolean;
-  waterService?: boolean;
+  electricService?: string;
+  waterService?: string;
 }
 
 export interface Resident {
@@ -186,6 +187,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 function normalizeHouseType(raw: string | undefined): House['houseType'] {
   const s = (raw ?? 'studio').toLowerCase().replace(/\s+/g, '_');
+  if (s.includes('three') || s === 'three_bedroom') return 'three_bedroom';
   if (s.includes('two') || s === 'two_bedroom') return 'two_bedroom';
   if (s.includes('one') || s === 'one_bedroom') return 'one_bedroom';
   if (s.includes('studio')) return 'studio';

@@ -21,8 +21,8 @@ $location = isset($_POST['location']) ? $_POST['location'] : null;
 $bedrooms = isset($_POST['bedrooms']) ? $_POST['bedrooms'] : 0;
 $bathrooms = isset($_POST['bathrooms']) ? $_POST['bathrooms'] : 0;
 $description = isset($_POST['description']) ? $_POST['description'] : null;
-$electric_service = isset($_POST['electric_service']) ? (int)filter_var($_POST['electric_service'], FILTER_VALIDATE_BOOLEAN) : 0;
-$water_service = isset($_POST['water_service']) ? (int)filter_var($_POST['water_service'], FILTER_VALIDATE_BOOLEAN) : 0;
+$electric_service = isset($_POST['electric_service']) ? $_POST['electric_service'] : 'yes';
+$water_service = isset($_POST['water_service']) ? $_POST['water_service'] : 'yes';
 
 
 if($block_id && $house_number){
