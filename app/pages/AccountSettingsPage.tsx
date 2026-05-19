@@ -39,6 +39,7 @@ type ApplicantDetailsApi = {
   maritalStatus: string | null;
   jobResponsibility: string | null;
   isDisabled: boolean;
+  disabilityType: string | null;
   applicationStatus: string | null;
   applicationId: string | null;
   score: number;
@@ -119,6 +120,7 @@ export default function AccountSettingsPage({ layoutRole }: Props) {
     maritalStatus: '',
     jobResponsibility: '',
     isDisabled: false,
+    disabilityType: '',
   });
   const [employmentLocked, setEmploymentLocked] = useState(false);
 
@@ -194,6 +196,7 @@ export default function AccountSettingsPage({ layoutRole }: Props) {
           maritalStatus: data.applicantDetails?.maritalStatus ?? '',
           jobResponsibility: data.applicantDetails?.jobResponsibility ?? '',
           isDisabled: Boolean(data.applicantDetails?.isDisabled),
+          disabilityType: data.applicantDetails?.disabilityType ?? '',
         });
         setEmploymentLocked(Boolean(data.applicantDetails?.employmentFieldsLocked));
         const np = data.notificationPreferences ?? {};
@@ -221,6 +224,7 @@ export default function AccountSettingsPage({ layoutRole }: Props) {
                 maritalStatus: data.applicantDetails.maritalStatus ?? undefined,
                 jobResponsibility: data.applicantDetails.jobResponsibility ?? undefined,
                 isDisabled: data.applicantDetails.isDisabled,
+                disabilityType: data.applicantDetails.disabilityType ?? undefined,
               }
             : {}),
         });
@@ -260,6 +264,7 @@ export default function AccountSettingsPage({ layoutRole }: Props) {
           maritalStatus: profileData.maritalStatus,
           jobResponsibility: profileData.jobResponsibility,
           isDisabled: profileData.isDisabled,
+          disabilityType: profileData.disabilityType,
         };
       }
 
@@ -307,6 +312,7 @@ export default function AccountSettingsPage({ layoutRole }: Props) {
           maritalStatus: data.applicantDetails.maritalStatus ?? undefined,
           jobResponsibility: data.applicantDetails.jobResponsibility ?? undefined,
           isDisabled: data.applicantDetails.isDisabled,
+          disabilityType: data.applicantDetails.disabilityType ?? undefined,
         });
         setEmploymentLocked(Boolean(data.applicantDetails.employmentFieldsLocked));
       }
@@ -631,6 +637,29 @@ export default function AccountSettingsPage({ layoutRole }: Props) {
                               Disability declaration (eligible female applicants qualify for fairness bonus scoring)
                             </label>
                           </div>
+                          
+                          {profileData.isDisabled && (
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-semibold text-slate-700 mb-2">Disability Type</label>
+                              <select
+                                disabled={employmentLocked}
+                                required={profileData.isDisabled}
+                                value={profileData.disabilityType}
+                                onChange={(e) => setProfileData({ ...profileData, disabilityType: e.target.value })}
+                                className="w-full px-4 py-3 rounded-xl border disabled:bg-slate-100"
+                              >
+                                <option value="">Select Disability Type</option>
+                                <option value="Wheelchair / Paralysis">Wheelchair / Paralysis (15%)</option>
+                                <option value="Total Blindness">Total Blindness (13%)</option>
+                                <option value="Deafness (Complete Hearing Loss)">Deafness (Complete Hearing Loss) (11%)</option>
+                                <option value="Missing Limb(s)">Missing Limb(s) (10%)</option>
+                                <option value="Intellectual / Developmental Disability">Intellectual / Developmental Disability (9%)</option>
+                                <option value="Partial Blindness / Low Vision">Partial Blindness / Low Vision (8%)</option>
+                                <option value="Physical Mobility Problem">Physical Mobility Problem (7%)</option>
+                                <option value="Severe Chronic Illness">Severe Chronic Illness (6%)</option>
+                              </select>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

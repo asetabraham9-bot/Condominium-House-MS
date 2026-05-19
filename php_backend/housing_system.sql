@@ -84,6 +84,7 @@ CREATE TABLE applicant_details (
   marital_status ENUM('Single', 'Married', 'Divorced', 'Widowed') NULL,
   job_responsibility VARCHAR(150) NULL,
   is_disabled TINYINT(1) NOT NULL DEFAULT 0,
+  disability_type VARCHAR(100) NULL,
   children_count INT NOT NULL DEFAULT 0,
   status ENUM('pending', 'approved', 'rejected', 'lottery_won', 'placed') NOT NULL DEFAULT 'pending',
   score DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -291,7 +292,8 @@ SET @pwd := '$2y$10$5f0Qh1jME5j6Q6pUr6l1euk9v2vR6j0dN4nO8H3E0iWm1Qx7lX9vO';
 INSERT INTO users (first_name, last_name, email, password_hash, phone_number, role, campus_id) VALUES
   ('System', 'Admin', 'admin@wsu.edu', @pwd, '+251900000001', 'system_admin', NULL),
   ('Campus', 'Admin', 'campus@wsu.edu', @pwd, '+251900000002', 'campus_admin', 1),
-  ('Applicant', 'User', 'applicant@wsu.edu', @pwd, '+251900000003', 'applicant', 1);
+  ('Applicant', 'User', 'applicant@wsu.edu', @pwd, '+251900000003', 'applicant', 1),
+  ('System', 'Manager', 'manager@chms.wsu.edu', @pwd, '0935451235', 'manager', NULL);
 
 INSERT INTO applications (
   title, round_label, description, house_details,
@@ -316,5 +318,22 @@ INSERT INTO applications (
   DATE_ADD(NOW(), INTERVAL 30 DAY),
   'open'
 );
+
+CREATE TABLE application_houses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  application_id INT NOT NULL,
+  house_type VARCHAR(100) NOT NULL,
+  campus_id INT NOT NULL,
+  monthly_payment DECIMAL(12,2) NOT NULL,
+  number_of_houses INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_app_houses_application
+    FOREIGN KEY (application_id) REFERENCES applications(id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_app_houses_campus
+    FOREIGN KEY (campus_id) REFERENCES campuses(id)
+    ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;

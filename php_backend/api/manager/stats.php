@@ -18,7 +18,7 @@ try {
     $q_overall = "SELECT 
         (SELECT COUNT(*) FROM blocks) AS totalBlocks,
         (SELECT COUNT(*) FROM houses) AS totalHouses,
-        (SELECT COUNT(*) FROM residents WHERE residence_status = 'active') AS totalActiveResidents
+        (SELECT COUNT(*) FROM residents WHERE status = 'active') AS totalActiveResidents
     ";
     $stmt = $db->query($q_overall);
     $overall = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -35,27 +35,24 @@ try {
         'studio' => ['occupied' => 0, 'available' => 0]
     ];
 
+    function normalize_house_type($type) {
+        $t = strtolower(trim($type));
+        if ($t === 'studio') return 'studio';
+        if ($t === 'one bedroom' || $t === 'one_bedroom' || $t === 'one bed') return 'one_bedroom';
+        if ($t === 'two bedroom' || $t === 'two_bedroom' || $t === 'two bed') return 'two_bedroom';
+        if ($t === 'three bedroom' || $t === 'three_bedroom' || $t === 'three bed') return 'three_bedroom';
+        return $t;
+    }
+
     foreach ($housesData as $row) {
-        $type = $row['house_type'];
-        $status = $row['status'] === 'occupied' ? 'occupied' : 'available'; // mapping maintenance to available or ignoring? Let's just group by occupied/available
+        $type = normalize_house_type($row['house_type'] ?? '');
+        $status = $row['status'] === 'occupied' ? 'occupied' : 'available';
         if (isset($houseStats[$type])) {
             $houseStats[$type][$status] += (int)$row['count'];
         }
     }
 
     // Campus breakdown
-    $q_campus = "SELECT 
-        c.id, 
-        c.name, 
-        (SELECT COUNT(*) FROM blocks b WHERE b.campus_id = c.id) as blocks,
-        h.house_type,
-        h.status,
-        COUNT(h.id) as h_count
-    FROM campuses c
-    LEFT JOIN houses h ON h.campus_id = c.id
-    GROUP BY c.id, h.house_type, h.status";
-    
-    // Wait, houses table doesn't have campus_id. It's blocks that have campus_id.
     $q_campus_fixed = "SELECT 
         c.id, 
         c.name, 
@@ -66,7 +63,7 @@ try {
     FROM campuses c
     LEFT JOIN blocks b ON b.campus_id = c.id
     LEFT JOIN houses h ON h.block_id = b.id
-    GROUP BY c.id, h.house_type, h.status";
+    GROUP BY c.id, c.name, h.house_type, h.status";
 
     $stmt_campus = $db->query($q_campus_fixed);
     $campusData = $stmt_campus->fetchAll(PDO::FETCH_ASSOC);
@@ -78,7 +75,7 @@ try {
             $campuses[$cid] = [
                 'id' => $cid,
                 'name' => $row['name'],
-                'totalBlocks' => $row['totalBlocks'],
+                'totalBlocks' => (int)$row['totalBlocks'],
                 'houses' => [
                     'one_bedroom' => ['occupied' => 0, 'available' => 0],
                     'two_bedroom' => ['occupied' => 0, 'available' => 0],
@@ -88,7 +85,7 @@ try {
             ];
         }
         if ($row['house_type']) {
-            $type = $row['house_type'];
+            $type = normalize_house_type($row['house_type']);
             $status = $row['status'] === 'occupied' ? 'occupied' : 'available';
             if (isset($campuses[$cid]['houses'][$type])) {
                 $campuses[$cid]['houses'][$type][$status] += (int)$row['count'];

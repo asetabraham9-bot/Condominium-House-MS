@@ -30,7 +30,8 @@ if(
     !empty($data->firstName) &&
     !empty($data->lastName) &&
     !empty($data->email) &&
-    !empty($data->password)
+    !empty($data->password) &&
+    !empty($data->campusId)
 ){
     // Validation
     if (!filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
@@ -55,10 +56,23 @@ if(
         exit();
     }
 
+    // Validate campus exists
+    $campusId = intval($data->campusId);
+    $campusQuery = "SELECT id, name FROM campuses WHERE id = :cid";
+    $campusStmt = $db->prepare($campusQuery);
+    $campusStmt->bindParam(':cid', $campusId, PDO::PARAM_INT);
+    $campusStmt->execute();
+    $campusRow = $campusStmt->fetch(PDO::FETCH_ASSOC);
+    if (!$campusRow) {
+        http_response_code(400);
+        echo json_encode(array("message" => "Invalid campus selected."));
+        exit();
+    }
+
     try {
         // Insert into Users table
-        $query = "INSERT INTO users (`first_name`, `last_name`, `email`, `password_hash`, `role`) 
-                  VALUES (:fname, :lname, :email, :password, 'applicant')";
+        $query = "INSERT INTO users (`first_name`, `last_name`, `email`, `password_hash`, `role`, `campus_id`) 
+                  VALUES (:fname, :lname, :email, :password, 'applicant', :campus_id)";
         $stmt = $db->prepare($query);
 
         $password_hash = password_hash($data->password, PASSWORD_BCRYPT);
@@ -67,6 +81,7 @@ if(
         $stmt->bindParam(":lname", $data->lastName);
         $stmt->bindParam(":email", $data->email);
         $stmt->bindParam(":password", $password_hash);
+        $stmt->bindParam(":campus_id", $campusId, PDO::PARAM_INT);
 
         if($stmt->execute()){
             $user_id = $db->lastInsertId();
@@ -79,7 +94,9 @@ if(
                     "firstName" => $data->firstName,
                     "lastName" => $data->lastName,
                     "email" => $data->email,
-                    "role" => "applicant"
+                    "role" => "applicant",
+                    "campusId" => (string)$campusId,
+                    "campusName" => $campusRow['name']
                 )
             ));
         } else {

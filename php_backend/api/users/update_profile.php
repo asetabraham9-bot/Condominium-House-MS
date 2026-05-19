@@ -131,6 +131,10 @@ if (($dbRole === 'applicant') && isset($data->applicantDetails) && is_object($da
             $adFields[] = "is_disabled = :dis";
             $adParams[':dis'] = !empty($d->isDisabled) ? 1 : 0;
         }
+        if (isset($d->disabilityType)) {
+            $adFields[] = "disability_type = :disType";
+            $adParams[':disType'] = trim((string)$d->disabilityType) === '' ? null : trim((string)$d->disabilityType);
+        }
 
         if (!empty($adFields)) {
             $adSql = "UPDATE applicant_details SET " . implode(", ", $adFields) . " WHERE user_id = :uid";
@@ -192,7 +196,7 @@ $applicantOut = null;
 if (($row['role'] ?? '') === 'applicant') {
     $ad = $db->prepare(
         "SELECT gender, academic_level, years_of_service, marital_status, job_responsibility,
-                is_disabled, status, application_id, score FROM applicant_details WHERE user_id = :uid LIMIT 1"
+                is_disabled, disability_type, status, application_id, score FROM applicant_details WHERE user_id = :uid LIMIT 1"
     );
     $ad->execute([':uid' => $userId]);
     $d = $ad->fetch(PDO::FETCH_ASSOC);
@@ -204,6 +208,7 @@ if (($row['role'] ?? '') === 'applicant') {
             'maritalStatus'        => $d['marital_status'],
             'jobResponsibility'    => $d['job_responsibility'],
             'isDisabled'           => (bool)$d['is_disabled'],
+            'disabilityType'       => $d['disability_type'] ? (string)$d['disability_type'] : null,
             'applicationStatus'    => $d['status'],
             'applicationId'        => $d['application_id'] ? (string)$d['application_id'] : null,
             'score'                => isset($d['score']) ? (float)$d['score'] : 0,

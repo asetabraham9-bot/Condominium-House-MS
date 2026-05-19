@@ -29,6 +29,8 @@ export default function Login() {
           navigate('/campus-admin');
         } else if (user.role === 'chms_admin') {
           navigate('/chms-admin');
+        } else if (user.role === 'manager') {
+          navigate('/manager/dashboard');
         }
       }, 500);
     } else {

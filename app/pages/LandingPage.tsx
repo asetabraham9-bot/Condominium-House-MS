@@ -22,7 +22,7 @@ export default function LandingPage() {
 
   // DB Connection Testing
   useEffect(() => {
-    fetch('http://localhost:3001/api/properties')
+    fetch('http://localhost:4000/api/properties')
       .then(r => r.json())
       .then(data => {
         console.log('Successfully connected to Backend DB:', data);

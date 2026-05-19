@@ -47,6 +47,14 @@ try {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($row) {
+        $q_conf = "SELECT ah.id, ah.house_type AS houseType, ah.campus_id AS campusId, c.name as campusName, ah.monthly_payment AS monthlyPayment, ah.number_of_houses AS numberOfHouses
+                   FROM application_houses ah
+                   LEFT JOIN campuses c ON ah.campus_id = c.id
+                   WHERE ah.application_id = :app_id";
+        $stmt_conf = $db->prepare($q_conf);
+        $stmt_conf->execute([':app_id' => (int)$row['id']]);
+        $row['houseConfigurations'] = $stmt_conf->fetchAll(PDO::FETCH_ASSOC);
+
         http_response_code(200);
         echo json_encode(["cycle" => $row]);
     } else {

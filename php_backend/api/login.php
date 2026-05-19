@@ -36,6 +36,7 @@ if (!empty($data->email) && !empty($data->password)) {
                 'system_admin'  => 'chms_admin',
                 'campus_admin'  => 'campus_admin',
                 'applicant'     => 'applicant',
+                'manager'       => 'manager',
             ];
             $frontendRole = $roleMap[$row['role']] ?? $row['role'];
 

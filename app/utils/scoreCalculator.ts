@@ -17,6 +17,7 @@ export interface ApplicantData {
   maritalStatus: string;
   childrenCount: number;
   isDisabled: boolean;
+  disabilityType?: string | null;
   gender?: string;
 }
 
@@ -78,10 +79,31 @@ export function calculateServiceScore(years: number): number {
 }
 
 /**
- * Calculate disability score (15 points)
+ * Calculate disability score (up to 15 points based on type)
  */
-export function calculateDisabilityScore(isDisabled: boolean): number {
-  return isDisabled ? 15 : 0;
+export function calculateDisabilityScore(isDisabled: boolean, disabilityType?: string | null): number {
+  if (!isDisabled) return 0;
+  
+  switch (disabilityType) {
+    case 'Wheelchair / Paralysis':
+      return 15;
+    case 'Total Blindness':
+      return 13;
+    case 'Deafness (Complete Hearing Loss)':
+      return 11;
+    case 'Missing Limb(s)':
+      return 10;
+    case 'Intellectual / Developmental Disability':
+      return 9;
+    case 'Partial Blindness / Low Vision':
+      return 8;
+    case 'Physical Mobility Problem':
+      return 7;
+    case 'Severe Chronic Illness':
+      return 6;
+    default:
+      return 0; // If they check isDisabled but haven't selected a type yet, they get 0 until they do
+  }
 }
 
 /**
@@ -92,7 +114,7 @@ export function calculateTotalScore(applicant: ApplicantData): number {
   const jobScore = calculateJobScore(applicant.jobResponsibility);
   const maritalScore = calculateMaritalScore(applicant.maritalStatus, applicant.childrenCount);
   const serviceScore = calculateServiceScore(applicant.yearsOfService);
-  const disabilityScore = calculateDisabilityScore(applicant.isDisabled);
+  const disabilityScore = calculateDisabilityScore(applicant.isDisabled, applicant.disabilityType);
 
   return Math.round(academicScore + jobScore + maritalScore + serviceScore + disabilityScore);
 }
@@ -123,7 +145,7 @@ export function getScoreBreakdown(applicant: ApplicantData) {
       percentage: '15%',
     },
     disability: {
-      value: calculateDisabilityScore(applicant.isDisabled),
+      value: calculateDisabilityScore(applicant.isDisabled, applicant.disabilityType),
       max: 15,
       percentage: '15%',
     },

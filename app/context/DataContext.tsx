@@ -57,6 +57,14 @@ export interface HousingCycle {
   campusName?: string | null;
   blockName?: string | null;
   houseImages?: string[];
+  houseConfigurations?: Array<{
+    id?: string;
+    houseType: string;
+    campusId: string;
+    campusName?: string;
+    monthlyPayment: number;
+    numberOfHouses: number;
+  }>;
 }
 
 export interface Campus {
@@ -299,7 +307,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             return {
               ...app,
               cycleId: app.cycleId != null ? String(app.cycleId) : undefined,
-              status: (app.status === 'lottery_won' ? 'lottery' : app.status) as Application['status'],
+              status: ((app.status as string) === 'lottery_won' ? 'lottery' : app.status) as Application['status'],
               cycleHouseImages: imgs,
             };
           })
@@ -311,9 +319,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (cyclesResult?.records) {
         setHousingCycles(
           cyclesResult.records.map((c) => {
-            const raw = c as HousingCycle & { houseImages?: unknown };
+            const raw = c as HousingCycle & { houseImages?: unknown; houseConfigurations?: unknown };
             const imgs = Array.isArray(raw.houseImages)
               ? (raw.houseImages as string[])
+              : [];
+            const confs = Array.isArray(raw.houseConfigurations)
+              ? (raw.houseConfigurations as any[]).map((hc) => ({
+                  id: hc.id ? String(hc.id) : undefined,
+                  houseType: String(hc.houseType),
+                  campusId: String(hc.campusId),
+                  campusName: hc.campusName ? String(hc.campusName) : undefined,
+                  monthlyPayment: Number(hc.monthlyPayment),
+                  numberOfHouses: Number(hc.numberOfHouses),
+                }))
               : [];
             return {
               ...c,
@@ -321,17 +339,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
               campusId: c.campusId != null ? String(c.campusId) : null,
               blockId: c.blockId != null ? String(c.blockId) : null,
               monthlyPayment:
-                c.monthlyPayment === null || c.monthlyPayment === undefined || c.monthlyPayment === ''
+                c.monthlyPayment === null || c.monthlyPayment === undefined || (c.monthlyPayment as any) === ''
                   ? null
                   : Number(c.monthlyPayment),
               applicationFee:
-                c.applicationFee === null || c.applicationFee === undefined || c.applicationFee === ''
+                c.applicationFee === null || c.applicationFee === undefined || (c.applicationFee as any) === ''
                   ? null
                   : Number(c.applicationFee),
               bedrooms: c.bedrooms != null ? Number(c.bedrooms) : null,
               bathrooms: c.bathrooms != null ? Number(c.bathrooms) : null,
               status: c.status as HousingCycle['status'],
               houseImages: imgs,
+              houseConfigurations: confs,
             };
           })
         );
@@ -382,7 +401,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           notificationResult.records.map((item) => ({
             id: item.id,
             message: item.message,
-            dateSent: item.sentAt ?? item.createdAt ?? new Date().toISOString(),
+            dateSent: item.sentAt ?? (item as any).createdAt ?? new Date().toISOString(),
             type: 'info',
             recipient: 'all',
           }))

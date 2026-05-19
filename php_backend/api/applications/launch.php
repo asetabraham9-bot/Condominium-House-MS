@@ -125,16 +125,30 @@ if (!$isMultipart && $data) {
     }
 }
 
-$houseType = $pick('houseType');
+$houseConfigurationsRaw = $pick('houseConfigurations', '[]');
+$houseConfigurations = json_decode($houseConfigurationsRaw, true);
+if (!is_array($houseConfigurations)) {
+    $houseConfigurations = [];
+}
+
+// Map the first configuration to legacy columns for backward compatibility
+$firstConfig = count($houseConfigurations) > 0 ? $houseConfigurations[0] : null;
+
+$houseType = $firstConfig ? $firstConfig['houseType'] : $pick('houseType');
 if ($houseType === '') {
     $houseType = null;
 }
 
-$campusIdRaw = $isMultipart ? ($post['campusId'] ?? '') : ($data->campusId ?? '');
-$campusId = $campusIdRaw !== '' && $campusIdRaw !== null ? (int)$campusIdRaw : null;
+$campusId = $firstConfig ? (int)$firstConfig['campusId'] : null;
+if (!$campusId) {
+    $campusIdRaw = $isMultipart ? ($post['campusId'] ?? '') : ($data->campusId ?? '');
+    $campusId = $campusIdRaw !== '' && $campusIdRaw !== null ? (int)$campusIdRaw : null;
+}
 if ($campusId === 0) {
     $campusId = null;
 }
+
+$monthly = $firstConfig ? (float)$firstConfig['monthlyPayment'] : $pickNum('monthlyPayment');
 
 $blockIdRaw = $isMultipart ? ($post['blockId'] ?? '') : ($data->blockId ?? '');
 $blockId = $blockIdRaw !== '' && $blockIdRaw !== null ? (int)$blockIdRaw : null;
@@ -195,6 +209,20 @@ try {
     $stmt->execute($params);
 
     $id = (int)$db->lastInsertId();
+
+    // Insert configurations into application_houses table
+    if (count($houseConfigurations) > 0) {
+        $insConf = $db->prepare("INSERT INTO application_houses (application_id, house_type, campus_id, monthly_payment, number_of_houses) VALUES (:app_id, :type, :campus_id, :payment, :num)");
+        foreach ($houseConfigurations as $conf) {
+            $insConf->execute([
+                ':app_id' => $id,
+                ':type' => $conf['houseType'],
+                ':campus_id' => (int)$conf['campusId'],
+                ':payment' => (float)$conf['monthlyPayment'],
+                ':num' => (int)$conf['numberOfHouses']
+            ]);
+        }
+    }
 
     $savedRelative = [];
 

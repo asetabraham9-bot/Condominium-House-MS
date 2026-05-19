@@ -18,6 +18,7 @@ import {
   Sparkles,
   Wallet,
   Zap,
+  ClipboardList,
 } from 'lucide-react';
 import StatusBadge from '../../components/StatusBadge';
 
@@ -47,6 +48,7 @@ export default function ApplyHouse() {
     childrenCount: 0,
     jobResponsibility: user?.jobResponsibility || '',
     isDisabled: user?.isDisabled || false,
+    disabilityType: user?.disabilityType || '',
   });
 
   useEffect(() => {
@@ -55,14 +57,30 @@ export default function ApplyHouse() {
     }
   }, [user, navigate]);
 
+  // Sync user state to form on load
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        gender: prev.gender || user.gender || '',
+        academicLevel: prev.academicLevel || user.academicLevel || '',
+        yearsOfService: prev.yearsOfService || user.yearsOfService || 0,
+        maritalStatus: prev.maritalStatus || user.maritalStatus || '',
+        jobResponsibility: prev.jobResponsibility || user.jobResponsibility || '',
+        isDisabled: prev.isDisabled || user.isDisabled || false,
+        disabilityType: prev.disabilityType || user.disabilityType || '',
+      }));
+    }
+  }, [user]);
+
   const currentScore = calculateTotalScore({
     ...formData,
-    gender: user?.gender,
+    gender: user?.gender || formData.gender,
   });
 
   const scoreBreakdown = getScoreBreakdown({
     ...formData,
-    gender: user?.gender,
+    gender: user?.gender || formData.gender,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -71,7 +89,7 @@ export default function ApplyHouse() {
       ...formData,
       [name]:
         type === 'number'
-          ? parseInt(value)
+          ? parseInt(value) || 0
           : type === 'checkbox'
             ? (e.target as HTMLInputElement).checked
             : value,
@@ -108,6 +126,7 @@ export default function ApplyHouse() {
           childrenCount: formData.childrenCount,
           jobResponsibility: formData.jobResponsibility,
           isDisabled: formData.isDisabled,
+          disabilityType: formData.disabilityType,
           score: currentScore,
         }),
       });
@@ -127,10 +146,7 @@ export default function ApplyHouse() {
   };
 
   const houseImages = openCycle?.houseImages ?? [];
-
   const mySubmission = user ? applications.find((a) => a.applicantId === user.id) : undefined;
-
-  /** Active cycle submission blocks the form unless admin rejects the application */
   const submissionComplete = Boolean(
     mySubmission &&
       mySubmission.cycleId != null &&
@@ -320,82 +336,70 @@ export default function ApplyHouse() {
                         <p className="text-slate-700 leading-relaxed">{openCycle.description}</p>
                       ) : null}
 
-                      <div className="grid grid-cols-1 gap-3">
-                        {(openCycle.applicationFee != null || openCycle.monthlyPayment != null) && (
-                          <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3 flex flex-wrap gap-4">
-                            {openCycle.applicationFee != null && (
-                              <div className="flex items-start gap-2 min-w-[44%]">
-                                <Wallet className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
-                                <div>
-                                  <p className="text-[11px] uppercase text-indigo-600 font-semibold">Application fee</p>
-                                  <p className="text-base font-bold text-slate-900">
-                                    {openCycle.applicationFee.toLocaleString()} ETB
-                                  </p>
-                                </div>
+                      {/* Configurations List */}
+                      {openCycle.houseConfigurations && openCycle.houseConfigurations.length > 0 ? (
+                        <div className="space-y-3">
+                          <p className="text-xs uppercase font-bold text-slate-500 tracking-wider">Unit Offerings</p>
+                          {openCycle.houseConfigurations.map((hc, index) => (
+                            <div key={index} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs space-y-1">
+                              <div className="flex justify-between font-semibold text-slate-900">
+                                <span>{hc.houseType}</span>
+                                <span className="text-indigo-600">{hc.monthlyPayment.toLocaleString()} ETB/mo</span>
                               </div>
-                            )}
-                            {openCycle.monthlyPayment != null && (
-                              <div className="flex items-start gap-2 min-w-[44%]">
-                                <Building2 className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
-                                <div>
-                                  <p className="text-[11px] uppercase text-indigo-600 font-semibold">Monthly</p>
-                                  <p className="text-base font-bold text-slate-900">
-                                    {openCycle.monthlyPayment.toLocaleString()} ETB
-                                  </p>
-                                </div>
+                              <div className="flex justify-between text-slate-500">
+                                <span>Campus: {hc.campusName}</span>
+                                <span>{hc.numberOfHouses} houses</span>
                               </div>
-                            )}
-                          </div>
-                        )}
-
-                        <div className="flex gap-3 flex-wrap">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-medium">
-                            <Zap className="w-3.5 h-3.5" />
-                            Power: {ynLabel(openCycle.electricityService)}
-                          </span>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-medium">
-                            <Droplets className="w-3.5 h-3.5" />
-                            Water: {ynLabel(openCycle.waterService)}
-                          </span>
+                            </div>
+                          ))}
                         </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-3">
+                          {(openCycle.applicationFee != null || openCycle.monthlyPayment != null) && (
+                            <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3 flex flex-wrap gap-4">
+                              {openCycle.applicationFee != null && (
+                                <div className="flex items-start gap-2 min-w-[44%]">
+                                  <Wallet className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                                  <div>
+                                    <p className="text-[11px] uppercase text-indigo-600 font-semibold">Application fee</p>
+                                    <p className="text-base font-bold text-slate-900">
+                                      {openCycle.applicationFee.toLocaleString()} ETB
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              {openCycle.monthlyPayment != null && (
+                                <div className="flex items-start gap-2 min-w-[44%]">
+                                  <Building2 className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                                  <div>
+                                    <p className="text-[11px] uppercase text-indigo-600 font-semibold">Monthly</p>
+                                    <p className="text-base font-bold text-slate-900">
+                                      {openCycle.monthlyPayment.toLocaleString()} ETB
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[13px]">
-                          <div>
-                            <dt className="text-slate-500">House type</dt>
-                            <dd className="font-semibold text-slate-900">{openCycle.houseType ?? '—'}</dd>
-                          </div>
-                          <div>
-                            <dt className="text-slate-500">Bed / bath</dt>
-                            <dd className="font-semibold text-slate-900">
-                              {openCycle.bedrooms ?? '—'} / {openCycle.bathrooms ?? '—'}
-                            </dd>
-                          </div>
-                          <div className="col-span-2">
-                            <dt className="text-slate-500">Campus · block · number</dt>
-                            <dd className="font-semibold text-slate-900">
-                              {[openCycle.campusName, openCycle.blockName, openCycle.houseNumber]
-                                .filter(Boolean)
-                                .join(' · ') || '—'}
-                            </dd>
-                          </div>
-                          <div className="col-span-2">
-                            <dt className="flex items-center gap-1 text-slate-500">
-                              <CalendarClock className="w-3.5 h-3.5" /> Apply before
-                            </dt>
-                            <dd className="font-semibold text-indigo-700">
-                              {openCycle.deadline
-                                ? new Date(openCycle.deadline).toLocaleString()
-                                : '—'}
-                            </dd>
-                          </div>
-                        </dl>
-
-                        {openCycle.houseDetails ? (
-                          <p className="text-xs text-slate-600 border-l-2 border-teal-500 pl-3 py-1">
-                            {openCycle.houseDetails}
-                          </p>
-                        ) : null}
+                      <div className="flex gap-3 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-medium">
+                          <Zap className="w-3.5 h-3.5 text-amber-500" />
+                          Power: {ynLabel(openCycle.electricityService)}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-medium">
+                          <Droplets className="w-3.5 h-3.5 text-blue-500" />
+                          Water: {ynLabel(openCycle.waterService)}
+                        </span>
                       </div>
+
+                      {openCycle.houseDetails ? (
+                        <p className="text-xs text-slate-600 border-l-2 border-teal-500 pl-3 py-1 font-mono">
+                          {openCycle.houseDetails}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 </>
@@ -427,11 +431,11 @@ export default function ApplyHouse() {
                 <ul className="mt-5 grid sm:grid-cols-2 gap-2">
                   {(
                     [
-                      ['Academic', scoreBreakdown.academic.value],
-                      ['Service', scoreBreakdown.service.value],
-                      ['Job role', scoreBreakdown.job.value],
-                      ['Marital', scoreBreakdown.marital.value],
-                      ['Disability bonus', scoreBreakdown.disability.value],
+                      ['Academic Degree', scoreBreakdown.academic.value],
+                      ['Service Duration', scoreBreakdown.service.value],
+                      ['Responsibility', scoreBreakdown.job.value],
+                      ['Marital Status', scoreBreakdown.marital.value],
+                      ['Female Disability Bonus', scoreBreakdown.disability.value],
                     ] as const
                   ).map(([label, pts]) =>
                     pts > 0 ? (
@@ -440,7 +444,7 @@ export default function ApplyHouse() {
                         className="flex justify-between text-xs bg-white/70 border border-blue-50 rounded-lg px-3 py-1.5"
                       >
                         <span className="text-slate-600">{label}</span>
-                        <span className="font-bold text-blue-900">+{pts}</span>
+                        <span className="font-bold text-blue-900">+{pts} pts</span>
                       </li>
                     ) : null
                   )}
@@ -454,41 +458,45 @@ export default function ApplyHouse() {
                 }`}
               >
                 <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Gender <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition mb-5"
-                    >
-                      <option value="">Select gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Gender <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition"
+                      >
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    </div>
 
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Academic level <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="academicLevel"
-                      value={formData.academicLevel}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition"
-                    >
-                      <option value="">Select level</option>
-                      <option value="Professor">Professor</option>
-                      <option value="Assistant Professor">Assistant Professor</option>
-                      <option value="PhD">PhD</option>
-                      <option value="Masters">Masters</option>
-                      <option value="Bachelor">Bachelor</option>
-                      <option value="Diploma">Diploma</option>
-                      <option value="Certificate">Certificate</option>
-                    </select>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Academic level <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="academicLevel"
+                        value={formData.academicLevel}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition"
+                      >
+                        <option value="">Select level</option>
+                        <option value="Professor">Professor</option>
+                        <option value="Assistant Professor">Assistant Professor</option>
+                        <option value="PhD">PhD</option>
+                        <option value="Masters">Masters</option>
+                        <option value="Bachelor">Bachelor</option>
+                        <option value="Diploma">Diploma</option>
+                        <option value="Certificate">Certificate</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -541,26 +549,25 @@ export default function ApplyHouse() {
                         className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500"
                       />
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Job responsibility <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="jobResponsibility"
-                      value={formData.jobResponsibility}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="">Select</option>
-                      <option value="Dean">Dean</option>
-                      <option value="Department Head">Department Head</option>
-                      <option value="Lecturer">Lecturer</option>
-                      <option value="Assistant Lecturer">Assistant Lecturer</option>
-                      <option value="Other">Other</option>
-                    </select>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Job responsibility <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="jobResponsibility"
+                        value={formData.jobResponsibility}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="Dean">Dean</option>
+                        <option value="Department Head">Department Head</option>
+                        <option value="Lecturer">Lecturer</option>
+                        <option value="Assistant Lecturer">Assistant Lecturer</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
                   </div>
 
                   <label className="flex items-center gap-3 cursor-pointer rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
@@ -573,54 +580,45 @@ export default function ApplyHouse() {
                     />
                     <span className="text-sm text-slate-700">
                       Disability declaration
-                      {user?.gender === 'Female' ? (
-                        <span className="text-indigo-600 font-medium">
+                      {(user?.gender === 'Female' || formData.gender === 'Female') && (
+                        <span className="text-indigo-600 font-semibold">
                           {' '}
                           (female applicant bonus applies when eligible)
                         </span>
-                      ) : null}
+                      )}
                     </span>
                   </label>
+
+                  {formData.isDisabled && (
+                    <div className="mt-4 p-4 rounded-xl border border-amber-200 bg-amber-50">
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Disability Type <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="disabilityType"
+                        value={formData.disabilityType}
+                        onChange={handleChange}
+                        required={formData.isDisabled}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="">Select Disability Type</option>
+                        <option value="Wheelchair / Paralysis">Wheelchair / Paralysis</option>
+                        <option value="Visually Impaired / Blindness">Visually Impaired / Blindness</option>
+                        <option value="Hearing Impaired / Deafness">Hearing Impaired / Deafness</option>
+                        <option value="Amputation / Missing Limb">Amputation / Missing Limb</option>
+                        <option value="Intellectual / Cognitive Disability">Intellectual / Cognitive Disability</option>
+                        <option value="Other Physical Disability">Other Physical Disability</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
 
-                <div className="border-t border-slate-100 pt-6 grid sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2 rounded-xl bg-slate-900 text-white p-5">
-                    <p className="text-xs uppercase text-slate-400 font-semibold">Applicant snapshot</p>
-                    <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
-                      <div>
-                        <span className="text-slate-400">Name</span>
-                        <p className="font-semibold">
-                          {user?.firstName} {user?.lastName}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-slate-400">Email</span>
-                        <p className="font-semibold truncate">{user?.email}</p>
-                      </div>
-                      <div>
-                        <span className="text-slate-400">Calculated score</span>
-                        <p className="font-bold text-amber-400 text-lg">{currentScore}/100</p>
-                      </div>
-                      <div>
-                        <span className="text-slate-400">Today</span>
-                        <p className="font-semibold">{new Date().toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  </div>
-
+                <div className="pt-4">
                   <button
                     type="submit"
-                    disabled={!canApply}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-lg hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                    className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
                   >
-                    {canApply ? 'Submit application' : 'Applications closed'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/applicant')}
-                    className="w-full py-3.5 rounded-xl border border-slate-300 text-slate-800 font-semibold hover:bg-slate-50 transition-colors"
-                  >
-                    Cancel
+                    <ClipboardList className="w-5 h-5" /> Submit Housing Application
                   </button>
                 </div>
               </form>

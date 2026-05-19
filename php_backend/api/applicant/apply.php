@@ -76,6 +76,7 @@ if(
                     `children_count` = :children_count,
                     `job_responsibility` = :job,
                     `is_disabled` = :disabled,
+                    `disability_type` = :disability_type,
                     `score` = :score,
                     `status` = 'pending',
                     `application_id` = :app_id
@@ -90,6 +91,7 @@ if(
         $stmt->bindValue(":children_count", (int)$data->childrenCount, PDO::PARAM_INT);
         $stmt->bindValue(":job", $data->jobResponsibility);
         $stmt->bindValue(":disabled", (!empty($data->isDisabled) ? 1 : 0), PDO::PARAM_INT);
+        $stmt->bindValue(":disability_type", isset($data->disabilityType) && trim((string)$data->disabilityType) !== '' ? trim((string)$data->disabilityType) : null);
         $stmt->bindValue(":score", (int)$data->score, PDO::PARAM_INT);
         $stmt->bindValue(":app_id", (int)$cycle_id, PDO::PARAM_INT);
         $stmt->bindValue(":uid", (int)$data->userId, PDO::PARAM_INT);

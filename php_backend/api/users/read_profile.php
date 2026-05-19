@@ -69,7 +69,7 @@ try {
     if (($row['role'] ?? '') === 'applicant') {
         $ad = $db->prepare(
             "SELECT gender, academic_level, years_of_service, marital_status, job_responsibility,
-                    is_disabled, status, application_id, score
+                    is_disabled, disability_type, status, application_id, score
                FROM applicant_details
               WHERE user_id = :uid
               LIMIT 1"
@@ -84,6 +84,7 @@ try {
                 'maritalStatus'        => $detail['marital_status'],
                 'jobResponsibility'    => $detail['job_responsibility'],
                 'isDisabled'           => (bool)$detail['is_disabled'],
+                'disabilityType'       => $detail['disability_type'] ? (string)$detail['disability_type'] : null,
                 'applicationStatus'    => $detail['status'],
                 'applicationId'        => $detail['application_id'] ? (string)$detail['application_id'] : null,
                 'score'                => isset($detail['score']) ? (float)$detail['score'] : 0,

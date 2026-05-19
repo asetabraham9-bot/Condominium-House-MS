@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from 'sonner';
+import { API_BASE_URL } from '../lib/apiBase';
+
+interface Campus {
+  id: string;
+  name: string;
+  location: string;
+}
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -11,12 +18,31 @@ export default function Register() {
     lastName: '',
     email: '',
     password: '',
+    campusId: '',
   });
   const [loading, setLoading] = useState(false);
+  const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [campusesLoading, setCampusesLoading] = useState(true);
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    const fetchCampuses = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/campuses/read.php`);
+        const data = await response.json();
+        setCampuses(data.records || []);
+      } catch (error) {
+        console.error('Failed to fetch campuses:', error);
+        toast.error('Failed to load campuses. Please refresh the page.');
+      } finally {
+        setCampusesLoading(false);
+      }
+    };
+    fetchCampuses();
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -25,9 +51,14 @@ export default function Register() {
   };
 
   const validateForm = () => {
-    const { firstName, lastName, email, password } = formData;
+    const { firstName, lastName, email, password, campusId } = formData;
     if (!firstName || !lastName || !email || !password) {
       toast.error('All fields are required');
+      return false;
+    }
+
+    if (!campusId) {
+      toast.error('Please select a campus');
       return false;
     }
     
@@ -56,7 +87,7 @@ export default function Register() {
 
     const { ok, message } = await register({
       ...formData,
-      campusId: '1' // Default campus id to pass backend check if still present, though we removed it from backend
+      campusId: formData.campusId,
     });
 
     if (ok) {
@@ -127,6 +158,30 @@ export default function Register() {
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+            </div>
+
+            <div>
+              <label htmlFor="campusId" className="block text-sm font-medium text-gray-700 mb-2">
+                Campus *
+              </label>
+              <select
+                id="campusId"
+                name="campusId"
+                value={formData.campusId}
+                onChange={handleChange}
+                required
+                disabled={campusesLoading}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">
+                  {campusesLoading ? 'Loading campuses...' : '-- Select a Campus --'}
+                </option>
+                {campuses.map((campus) => (
+                  <option key={campus.id} value={campus.id}>
+                    {campus.name} — {campus.location}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

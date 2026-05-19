@@ -18,6 +18,7 @@ export interface User {
   maritalStatus?: string;
   jobResponsibility?: string;
   isDisabled?: boolean;
+  disabilityType?: string | null;
 }
 
 interface AuthContextType {

@@ -45,6 +45,29 @@ try {
     $stmt = $db->query($query);
     $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Fetch all house configurations from database
+    $q_conf = "SELECT ah.id, ah.application_id, ah.house_type, ah.campus_id, c.name as campusName, ah.monthly_payment, ah.number_of_houses
+               FROM application_houses ah
+               LEFT JOIN campuses c ON ah.campus_id = c.id";
+    $stmt_conf = $db->query($q_conf);
+    $all_confs = $stmt_conf->fetchAll(PDO::FETCH_ASSOC);
+
+    $confs_by_app = [];
+    foreach ($all_confs as $conf) {
+        $app_id = $conf['application_id'];
+        if (!isset($confs_by_app[$app_id])) {
+            $confs_by_app[$app_id] = [];
+        }
+        $confs_by_app[$app_id][] = [
+            'id' => $conf['id'],
+            'houseType' => $conf['house_type'],
+            'campusId' => $conf['campus_id'],
+            'campusName' => $conf['campusName'],
+            'monthlyPayment' => (float)$conf['monthly_payment'],
+            'numberOfHouses' => (int)$conf['number_of_houses']
+        ];
+    }
+
     foreach ($records as &$row) {
         $raw = isset($row['houseImages']) ? $row['houseImages'] : null;
         if ($raw !== null && $raw !== '') {
@@ -53,6 +76,7 @@ try {
         } else {
             $row['houseImages'] = [];
         }
+        $row['houseConfigurations'] = isset($confs_by_app[$row['id']]) ? $confs_by_app[$row['id']] : [];
     }
     unset($row);
 
