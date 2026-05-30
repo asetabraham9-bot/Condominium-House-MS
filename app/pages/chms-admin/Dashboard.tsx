@@ -5,14 +5,14 @@ import { useData } from '../../context/DataContext';
 import Layout from '../../components/Layout';
 import StatCard from '../../components/StatCard';
 import StatusBadge from '../../components/StatusBadge';
-import { FileText, Users, TrendingUp, Home, Rocket, Lock } from 'lucide-react';
+import { FileText, Users, TrendingUp, Home, Rocket, Lock, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from 'sonner';
 import { API_BASE_URL } from '../../lib/apiBase';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { applications, residents, blocks, houses, housingCycles, refreshData } = useData();
+  const { applications, residents, blocks, houses, housingCycles, notifications, refreshData } = useData();
   const navigate = useNavigate();
   const [closing, setClosing] = useState(false);
 
@@ -174,24 +174,62 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Applications */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Applications</h2>
-          <div className="space-y-3">
-            {applications.slice(0, 5).map((app) => (
-              <div
-                key={app.applicantId}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div>
-                  <p className="font-medium text-gray-900">{app.applicantName}</p>
-                  <p className="text-sm text-gray-600">
-                    Score: {app.score} | {new Date(app.applicationDate).toLocaleDateString()}
-                  </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+          {/* Recent Applications */}
+          <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Applications</h2>
+            <div className="space-y-3">
+              {applications.slice(0, 5).map((app) => (
+                <div
+                  key={app.applicantId}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium text-gray-900">{app.applicantName}</p>
+                    <p className="text-sm text-gray-600">
+                      Score: {app.score} | {new Date(app.applicationDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <StatusBadge status={app.status as any} />
                 </div>
-                <StatusBadge status={app.status as any} />
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* Forwarded House Requests */}
+          <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Bell className="w-5 h-5 text-indigo-600 animate-pulse" />
+              Forwarded House Nominations
+            </h2>
+            <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+              {notifications.filter((n) => n.message.includes('[FORWARDED_REQUEST]')).length === 0 ? (
+                <div className="text-sm text-gray-500 text-center py-8">
+                  No forwarded house reports from managers.
+                </div>
+              ) : (
+                notifications
+                  .filter((n) => n.message.includes('[FORWARDED_REQUEST]'))
+                  .map((req) => (
+                    <div
+                      key={req.id}
+                      className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-2 text-xs"
+                    >
+                      <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                        <span className="bg-indigo-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                          Forwarded Report
+                        </span>
+                        <span className="text-slate-500 font-medium">
+                          {new Date(req.dateSent).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <pre className="whitespace-pre-wrap font-mono text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-100 shadow-inner">
+                        {req.message.replace('[FORWARDED_REQUEST] ', '')}
+                      </pre>
+                    </div>
+                  ))
+              )}
+            </div>
           </div>
         </div>
       </div>

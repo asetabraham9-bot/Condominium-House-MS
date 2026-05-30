@@ -294,7 +294,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             ),
         fetchJson<{ records: ResidentRequest[] }>(`/resident_requests/read.php${residentCampusFilter}`),
         loadCycles ? fetchJson<{ records: HousingCycle[] }>('/applications/read_cycles.php') : Promise.resolve(null),
-        user?.role === 'chms_admin' ? fetchJson<{ records: Campus[] }>('/campuses/read.php') : Promise.resolve(null),
+        user ? fetchJson<{ records: Campus[] }>('/campuses/read.php') : Promise.resolve(null),
       ]);
 
       if (applicationsResult?.records) {

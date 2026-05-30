@@ -31,6 +31,7 @@ import CampusAdminSettings from "./pages/campus-admin/Settings";
 import ChmsAdminSettings from "./pages/chms-admin/Settings";
 import ManagerDashboard from "./pages/manager/Dashboard";
 import ManagerCampusInfo from "./pages/manager/CampusInfo";
+import InformHouseRequests from "./pages/manager/InformHouseRequests";
 
 export const router = createBrowserRouter([
   {
@@ -152,5 +153,9 @@ export const router = createBrowserRouter([
   {
     path: "/manager/campus-info",
     Component: ManagerCampusInfo,
+  },
+  {
+    path: "/manager/inform-house-requests",
+    Component: InformHouseRequests,
   },
 ]);

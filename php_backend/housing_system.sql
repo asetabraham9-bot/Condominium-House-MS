@@ -1,6 +1,3 @@
--- housing_system.sql
--- Import into MySQL Workbench for XAMPP (Database.php uses db name: housing_system)
--- Matches php_backend API expectations (notably resident_requests.status workflow)
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -334,6 +331,26 @@ CREATE TABLE application_houses (
   CONSTRAINT fk_app_houses_campus
     FOREIGN KEY (campus_id) REFERENCES campuses(id)
     ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE inform_house_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  informer_id INT NOT NULL,
+  campus_id INT NOT NULL,
+  block VARCHAR(100) NOT NULL,
+  house_type ENUM('Studio', 'one bed', 'two bed', 'three bed') NOT NULL,
+  house_status ENUM('available', 'maintenance') NOT NULL,
+  maintenance_description TEXT NULL,
+  status ENUM('pending', 'resolved', 'rejected') NOT NULL DEFAULT 'pending',
+  forwarded_to_admin TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_inform_requests_informer
+    FOREIGN KEY (informer_id) REFERENCES users(id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_inform_requests_campus
+    FOREIGN KEY (campus_id) REFERENCES campuses(id)
+    ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;

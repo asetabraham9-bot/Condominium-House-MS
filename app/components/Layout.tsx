@@ -69,6 +69,7 @@ export default function Layout({ children, role }: LayoutProps) {
   const managerMenuItems = [
     { icon: Home, label: 'Dashboard', path: '/manager/dashboard' },
     { icon: Building2, label: 'Campus Information', path: '/manager/campus-info' },
+    { icon: ClipboardList, label: 'Inform House Requests', path: '/manager/inform-house-requests' },
   ];
 
   const menuItems =

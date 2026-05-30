@@ -43,6 +43,7 @@ export default function Dashboard() {
     notifications,
     residentRequests,
     housingCycles,
+    campuses,
     refreshData,
   } = useData();
   const navigate = useNavigate();
@@ -54,6 +55,16 @@ export default function Dashboard() {
     description: '',
     priority: 'medium' as 'low' | 'medium' | 'high',
   });
+
+  const [showNominateForm, setShowNominateForm] = useState(false);
+  const [nominateFormData, setNominateFormData] = useState({
+    campusId: '',
+    block: '',
+    houseType: 'Studio',
+    houseStatus: 'available',
+    maintenanceDescription: '',
+  });
+  const [submittingNomination, setSubmittingNomination] = useState(false);
 
   // Application form state
   const [formData, setFormData] = useState({
@@ -229,6 +240,59 @@ export default function Dashboard() {
       priority: 'medium',
     });
     setShowRequestForm(false);
+  };
+
+  const handleNominateSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!user?.id) return;
+
+    if (!nominateFormData.campusId || !nominateFormData.block || !nominateFormData.houseType || !nominateFormData.houseStatus) {
+      toast.error('Please fill in all required fields.');
+      return;
+    }
+
+    if (nominateFormData.houseStatus === 'maintenance' && !nominateFormData.maintenanceDescription.trim()) {
+      toast.error('Please describe what is messed up in the maintenance description.');
+      return;
+    }
+
+    setSubmittingNomination(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/applicant/submit_nomination.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          informerId: user.id,
+          campusId: nominateFormData.campusId,
+          block: nominateFormData.block,
+          houseType: nominateFormData.houseType,
+          houseStatus: nominateFormData.houseStatus,
+          maintenanceDescription: nominateFormData.maintenanceDescription,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.message || 'Failed to submit nomination request.');
+        return;
+      }
+
+      toast.success('Thank you for your nomination request! Your cooperation is highly valued.');
+      setNominateFormData({
+        campusId: '',
+        block: '',
+        houseType: 'Studio',
+        houseStatus: 'available',
+        maintenanceDescription: '',
+      });
+      setShowNominateForm(false);
+      await refreshData();
+    } catch (error) {
+      console.error('Error submitting nomination:', error);
+      toast.error('Network error. Unable to submit nomination.');
+    } finally {
+      setSubmittingNomination(false);
+    }
   };
 
   return (
@@ -1007,6 +1071,125 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          {/* Inform / Nominate House */}
+          <div className="bg-white p-8 rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  <Building2 className="w-6 h-6 text-indigo-600" />
+                  Inform / Nominate House
+                </h2>
+                <p className="text-slate-500 text-sm mt-1">
+                  Report a free/available house or one requiring maintenance in any of our campuses to maintain transparency.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowNominateForm(!showNominateForm)}
+                className="shrink-0 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white rounded-xl hover:from-indigo-700 hover:to-indigo-900 font-semibold shadow-md hover:shadow-lg transition-all"
+              >
+                {showNominateForm ? 'Close Form' : 'Start Nomination'}
+              </button>
+            </div>
+
+            {showNominateForm && (
+              <form onSubmit={handleNominateSubmit} className="border-t border-slate-100 pt-6 mt-4 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Campus *
+                    </label>
+                    <select
+                      value={nominateFormData.campusId}
+                      onChange={(e) => setNominateFormData({ ...nominateFormData, campusId: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors"
+                    >
+                      <option value="">-- Select Campus --</option>
+                      {campuses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Block *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Block 15"
+                      value={nominateFormData.block}
+                      onChange={(e) => setNominateFormData({ ...nominateFormData, block: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      House Type *
+                    </label>
+                    <select
+                      value={nominateFormData.houseType}
+                      onChange={(e) => setNominateFormData({ ...nominateFormData, houseType: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors"
+                    >
+                      <option value="Studio">Studio</option>
+                      <option value="one bed">One Bed</option>
+                      <option value="two bed">Two Bed</option>
+                      <option value="three bed">Three Bed</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      House Status *
+                    </label>
+                    <select
+                      value={nominateFormData.houseStatus}
+                      onChange={(e) => setNominateFormData({ ...nominateFormData, houseStatus: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors"
+                    >
+                      <option value="available">Ready for residence purpose (Available)</option>
+                      <option value="maintenance">Maintenance required</option>
+                    </select>
+                  </div>
+
+                  {nominateFormData.houseStatus === 'maintenance' && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Describe what and what were messed up *
+                      </label>
+                      <textarea
+                        rows={4}
+                        placeholder="Please describe the repairs or issues (e.g. broken plumbing, electrical issues)..."
+                        value={nominateFormData.maintenanceDescription}
+                        onChange={(e) => setNominateFormData({ ...nominateFormData, maintenanceDescription: e.target.value })}
+                        required
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors resize-none"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingNomination}
+                  className="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-colors"
+                >
+                  {submittingNomination ? 'Submitting...' : 'Submit Nomination'}
+                </button>
+              </form>
+            )}
+          </div>
 
           {/* Quick Actions */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">

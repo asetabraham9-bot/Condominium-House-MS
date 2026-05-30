@@ -191,7 +191,7 @@ export default function ManageApplicants() {
                             </div>
                             <div className="col-span-2">
                                 <span className="block text-gray-500 font-medium">Additional Info</span>
-                                <span className="text-gray-900">Score exactly calculated based on matrix. Double check logic in scoreCalculator.ts if anomalies.</span>
+                                <span className="text-gray-900">Score exactly calculated based on your personal detail information and scoring rule of the system.</span>
                             </div>
                           </div>
                         </td>
