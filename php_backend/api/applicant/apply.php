@@ -51,13 +51,22 @@ if(
         
         if($existingRecord) {
            // If they have an application_id assigned and status isn't 'rejected', then they already have an active application
-           if(!empty($existingRecord['application_id']) && !in_array($existingRecord['status'], ['rejected'])) {
-                http_response_code(400);
-                echo json_encode([
-                    "message" => "DUPLICATE PREVENTED: You already have an active application in the system. Our policy is 'One Applicant, One Application' to ensure fairness for all staff members.",
-                    "status" => $existingRecord['status']
-                ]);
-                exit();
+           if(!empty($existingRecord['application_id'])) {
+               if($existingRecord['application_id'] == $cycle_id) {
+                   http_response_code(400);
+                   echo json_encode([
+                       "message" => "DUPLICATE PREVENTED: You already have an active application in the current cycle.",
+                       "status" => $existingRecord['status']
+                   ]);
+                   exit();
+               } else if ($existingRecord['status'] === 'placed') {
+                   http_response_code(400);
+                   echo json_encode([
+                       "message" => "You cannot apply because you have already been placed in a house in a previous cycle.",
+                       "status" => $existingRecord['status']
+                   ]);
+                   exit();
+               }
            }
         } else {
             // If the row doesn't exist, create it (safety)

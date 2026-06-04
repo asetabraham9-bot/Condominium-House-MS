@@ -17,7 +17,6 @@ type HouseConfig = {
   numberOfHouses: number;
 };
 
-const MAX_IMAGES = 6;
 
 export default function LaunchCycle() {
   const { user } = useAuth();
@@ -25,7 +24,6 @@ export default function LaunchCycle() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [campuses, setCampuses] = useState<CampusRow[]>([]);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   // Multiple house configurations state
@@ -147,12 +145,6 @@ export default function LaunchCycle() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const onImagesPick = (e: ChangeEvent<HTMLInputElement>) => {
-    const list = Array.from(e.target.files ?? []).slice(0, MAX_IMAGES);
-    setImageFiles(list);
-    e.target.value = '';
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) {
@@ -171,10 +163,6 @@ export default function LaunchCycle() {
       toast.error('You must be signed in');
       return;
     }
-    if (imageFiles.length > MAX_IMAGES) {
-      toast.error(`You can attach at most ${MAX_IMAGES} images`);
-      return;
-    }
 
     setSaving(true);
     try {
@@ -189,10 +177,6 @@ export default function LaunchCycle() {
       fd.append('deadline', form.deadline);
       fd.append('launchedBy', user.id);
       fd.append('houseConfigurations', JSON.stringify(houseConfigurations));
-
-      imageFiles.forEach((file) => {
-        fd.append('images[]', file);
-      });
 
       const res = await fetch(`${API_BASE_URL}/applications/launch.php`, {
         method: 'POST',
@@ -216,7 +200,6 @@ export default function LaunchCycle() {
         deadline: '',
       });
       setHouseConfigurations([]);
-      setImageFiles([]);
     } catch {
       toast.error('Network error');
     } finally {
@@ -495,6 +478,7 @@ export default function LaunchCycle() {
                     >
                       <option value="yes">Yes (Included/Available)</option>
                       <option value="no">No</option>
+                      <option value="maintenance">Maintenance Required</option>
                     </select>
                   </div>
                   <div>
@@ -507,38 +491,12 @@ export default function LaunchCycle() {
                     >
                       <option value="yes">Yes (Included/Available)</option>
                       <option value="no">No</option>
+                      <option value="maintenance">Maintenance Required</option>
                     </select>
                   </div>
                 </div>
 
-                {/* Image Upload */}
-                <div className="border border-dashed border-slate-300 rounded-xl p-5 bg-slate-50">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="flex items-center gap-3 text-teal-800">
-                      <div className="p-3 bg-white rounded-xl shadow-sm border border-teal-100">
-                        <ImagePlus className="w-7 h-7" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-900">House Photos</p>
-                        <p className="text-xs text-slate-600">Up to {MAX_IMAGES} images (JPEG, PNG, WebP)</p>
-                      </div>
-                    </div>
-                    <label className="sm:ml-auto cursor-pointer inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 shadow-sm transition-colors text-sm">
-                      Choose files
-                      <input type="file" accept="image/*" multiple className="hidden" onChange={onImagesPick} />
-                    </label>
-                  </div>
-                  {imageFiles.length > 0 && (
-                    <ul className="mt-4 text-xs text-slate-600 space-y-1 bg-white border border-slate-200 rounded-lg p-3">
-                      {imageFiles.map((f, i) => (
-                        <li key={`${f.name}-${i}`} className="flex justify-between">
-                          <span>{i + 1}. {f.name}</span>
-                          <span className="font-semibold">{Math.round(f.size / 1024)} KB</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+
               </div>
             </div>
 

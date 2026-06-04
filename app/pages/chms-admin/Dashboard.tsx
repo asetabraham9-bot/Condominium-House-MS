@@ -14,7 +14,6 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { applications, residents, blocks, houses, housingCycles, notifications, refreshData } = useData();
   const navigate = useNavigate();
-  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     if (!user || user.role !== 'chms_admin') {
@@ -27,34 +26,6 @@ export default function Dashboard() {
   const openCycle = housingCycles.find((c) => c.status === 'open');
   const activeResidents = residents.filter((r) => r.residenceStatus === 'active');
   const availableHouses = houses.filter((h) => h.status === 'available');
-
-  const handleCloseApplications = async () => {
-    if (!openCycle) {
-      toast.info('There is no open application cycle to close.');
-      return;
-    }
-    if (
-      typeof window !== 'undefined' &&
-      !window.confirm('Close the open application cycle? Applicants will no longer be able to submit until a new cycle is launched.')
-    ) {
-      return;
-    }
-    setClosing(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/applications/close_cycle.php`, { method: 'POST' });
-      const data = (await res.json().catch(() => ({}))) as { message?: string };
-      if (!res.ok) {
-        toast.error(data.message ?? 'Could not close applications');
-        return;
-      }
-      await refreshData();
-      toast.success(data.message ?? 'Application cycle closed.');
-    } catch {
-      toast.error('Network error');
-    } finally {
-      setClosing(false);
-    }
-  };
 
   return (
     <Layout role="chms_admin">
@@ -136,15 +107,6 @@ export default function Dashboard() {
                 className="w-full p-3 text-left border-2 border-orange-600 text-orange-700 rounded-lg hover:bg-orange-50 transition-colors font-medium"
               >
                 Launch application cycle
-              </button>
-              <button
-                type="button"
-                disabled={closing || !openCycle}
-                onClick={handleCloseApplications}
-                className="w-full p-3 text-left border-2 border-gray-700 text-gray-900 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                <Lock className="w-5 h-5 shrink-0" />
-                {closing ? 'Closing…' : 'Close application'}
               </button>
               <button
                 onClick={() => navigate('/chms-admin/applicants')}

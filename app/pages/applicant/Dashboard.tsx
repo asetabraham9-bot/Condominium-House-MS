@@ -112,7 +112,7 @@ export default function Dashboard() {
   const deadlineOk = deadlineMs == null || !Number.isFinite(deadlineMs) || deadlineMs >= Date.now();
   const canApply = Boolean(openCycle && deadlineOk);
 
-  const mySubmission = user ? applications.find((a) => a.applicantId === user.id) : undefined;
+  const mySubmission = user ? applications.find((a) => a.applicantId === user.id && (a.cycleId === openCycle?.id || a.status === 'placed')) : undefined;
   const submissionComplete = Boolean(
     mySubmission &&
       mySubmission.cycleId != null &&
@@ -153,9 +153,9 @@ export default function Dashboard() {
       return;
     }
 
-    const existingApp = applications.find((app) => app.applicantId === user.id && app.status === 'pending');
+    const existingApp = applications.find((app) => app.applicantId === user.id && app.status === 'pending' && app.cycleId === openCycle?.id);
     if (existingApp) {
-      toast.error('You already have a pending application');
+      toast.error('You already have a pending application in the current cycle');
       return;
     }
 
@@ -623,6 +623,36 @@ export default function Dashboard() {
               </div>
             </div>
           ) : null}
+
+          {/* History Section */}
+          {housingCycles.filter(c => c.status === 'closed').length > 0 && (
+            <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200">
+              <div className="bg-slate-100 px-6 py-4 md:px-8 border-b border-slate-200">
+                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5 text-slate-500" />
+                  Application History
+                </h2>
+              </div>
+              <div className="p-6 md:p-8 space-y-4">
+                {housingCycles.filter(c => c.status === 'closed').map(cycle => (
+                  <div key={cycle.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50 transition-colors hover:bg-slate-100/50">
+                    <div>
+                      <h3 className="font-bold text-slate-800">{cycle.title}</h3>
+                      <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
+                        <CalendarClock className="w-4 h-4" />
+                        Deadline: {cycle.deadline ? new Date(cycle.deadline).toLocaleString() : '—'}
+                      </p>
+                    </div>
+                    <div className="mt-4 md:mt-0">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-200 text-slate-600">
+                        Closed
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

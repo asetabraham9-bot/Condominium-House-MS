@@ -146,7 +146,7 @@ export default function ApplyHouse() {
   };
 
   const houseImages = openCycle?.houseImages ?? [];
-  const mySubmission = user ? applications.find((a) => a.applicantId === user.id) : undefined;
+  const mySubmission = user ? applications.find((a) => a.applicantId === user.id && (a.cycleId === openCycle?.id || a.status === 'placed')) : undefined;
   const submissionComplete = Boolean(
     mySubmission &&
       mySubmission.cycleId != null &&

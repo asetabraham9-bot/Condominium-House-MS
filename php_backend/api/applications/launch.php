@@ -109,6 +109,9 @@ $toYesNo = static function (?string $raw): ?string {
     if (in_array($s, ['no', 'n', '0', 'false'], true)) {
         return 'no';
     }
+    if ($s === 'maintenance') {
+        return 'maintenance';
+    }
     return $s;
 };
 
@@ -164,10 +167,7 @@ if ($houseNumber === '') {
 $bedrooms = $pickIntNullable('bedrooms');
 $bathrooms = $pickIntNullable('bathrooms');
 
-$launchedByRaw = $isMultipart ? ($post['launchedBy'] ?? '') : ($data->launchedBy ?? null);
 $launchedBy = $launchedByRaw !== '' && $launchedByRaw !== null ? (int)$launchedByRaw : null;
-
-$allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
 try {
     $db->beginTransaction();
@@ -224,51 +224,12 @@ try {
         }
     }
 
-    $savedRelative = [];
-
-    if ($isMultipart && $uploadsRoot && !empty($_FILES['images'])) {
-        $files = $_FILES['images'];
-        $names = $files['name'];
-        $tmp = $files['tmp_name'];
-        $errs = $files['error'];
-        $cycleDir = $uploadsRoot . DIRECTORY_SEPARATOR . $id;
-        if (!is_dir($cycleDir)) {
-            mkdir($cycleDir, 0755, true);
-        }
-
-        $n = is_array($names) ? count($names) : 0;
-        $maxFiles = min(6, $n);
-
-        for ($i = 0; $i < $maxFiles; $i++) {
-            if ($errs[$i] !== UPLOAD_ERR_OK || !is_uploaded_file($tmp[$i])) {
-                continue;
-            }
-            $orig = basename((string)$names[$i]);
-            $ext = strtolower(pathinfo($orig, PATHINFO_EXTENSION));
-            if (!in_array($ext, $allowedExt, true)) {
-                continue;
-            }
-            $fname = sprintf('img_%s.%s', bin2hex(random_bytes(8)), $ext);
-            $destFs = $cycleDir . DIRECTORY_SEPARATOR . $fname;
-            if (move_uploaded_file($tmp[$i], $destFs)) {
-                $savedRelative[] = 'house_cycles/' . $id . '/' . $fname;
-            }
-        }
-
-        if (count($savedRelative) > 0) {
-            $json = json_encode($savedRelative, JSON_UNESCAPED_SLASHES);
-            $upd = $db->prepare('UPDATE applications SET house_images = :j WHERE id = :id');
-            $upd->execute([':j' => $json, ':id' => $id]);
-        }
-    }
-
     $db->commit();
 
     http_response_code(201);
     echo json_encode([
         "message" => "Application cycle launched.",
-        "id" => $id,
-        "house_images" => $savedRelative,
+        "id" => $id
     ]);
 } catch (Exception $e) {
     if ($db->inTransaction()) {

@@ -99,7 +99,6 @@ if (
                           . "- House Type: $houseType\n"
                           . "- House Status: " . ($houseStatus === 'available' ? 'Available (Ready)' : 'Maintenance Required') . "\n"
                           . "- Maintenance Notes: $maintDesc\n"
-                          . "- Informer: $informerName ($informerCampus)\n"
                           . "- Action Status: $status";
 
             // Insert notification for each system admin
