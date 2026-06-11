@@ -110,6 +110,8 @@ export interface Resident {
   campusId?: string;
   houseNumber?: string;
   blockName?: string;
+  campusName?: string;
+  houseType?: 'studio' | 'one_bedroom' | 'two_bedroom' | 'three_bedroom';
 }
 
 export interface Payment {
@@ -120,6 +122,7 @@ export interface Payment {
   paymentDate: string;
   paymentStatus: 'pending' | 'verified' | 'rejected';
   month: string;
+  campusId?: string;
   campusName?: string;
   payment_type?: string;
   transaction_id?: string;
@@ -381,6 +384,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             applicantId: resident.applicantId ?? resident.userId ?? resident.id,
             residenceStatus: resident.residenceStatus ?? 'active',
             campusId: resident.campusId ? String(resident.campusId) : undefined,
+            houseType: normalizeHouseType(resident.houseType),
           }))
         );
       }
@@ -389,6 +393,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setPayments(
           paymentsResult.records.map((payment) => ({
             ...payment,
+            campusId: payment.campusId ? String(payment.campusId) : undefined,
             paymentStatus: (payment.paymentStatus ??
               (payment as unknown as { status?: Payment['paymentStatus'] }).status ??
               'pending') as Payment['paymentStatus'],

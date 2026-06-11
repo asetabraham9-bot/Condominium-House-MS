@@ -65,8 +65,7 @@ export default function ManageResidents() {
 
   // Group residents by campus -> block -> house type
   const enrichedResidents = residents.map(r => {
-    const house = houses.find(h => h.id === r.houseId);
-    return { ...r, houseType: house?.houseType || 'unknown' };
+    return { ...r, houseType: r.houseType || 'unknown' };
   });
 
   const campuses = Array.from(new Set(enrichedResidents.map(r => r.campusName)));
@@ -78,6 +77,14 @@ export default function ManageResidents() {
     three_bedroom: 'Three Bedroom Houses',
     unknown: 'Unknown House Type',
   };
+
+  const orderedHouseTypes: ('studio' | 'one_bedroom' | 'two_bedroom' | 'three_bedroom' | 'unknown')[] = [
+    'studio',
+    'one_bedroom',
+    'two_bedroom',
+    'three_bedroom',
+    'unknown',
+  ];
 
   return (
     <Layout role="chms_admin">
@@ -116,7 +123,6 @@ export default function ManageResidents() {
               
               {blocksInCampus.map(block => {
                 const blockResidents = campusResidents.filter(r => r.blockName === block);
-                const houseTypesInBlock = Array.from(new Set(blockResidents.map(r => r.houseType)));
                 
                 return (
                   <div key={`${campus}-${block}`} className="ml-4 mb-8 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
@@ -126,8 +132,9 @@ export default function ManageResidents() {
                     </h3>
                     
                     <div className="space-y-8">
-                      {houseTypesInBlock.map(type => {
+                      {orderedHouseTypes.map(type => {
                         const typeResidents = blockResidents.filter(r => r.houseType === type);
+                        if (typeResidents.length === 0) return null;
                         return (
                           <div key={`${campus}-${block}-${type}`} className="ml-2">
                             <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">{labels[type] || type}</h4>

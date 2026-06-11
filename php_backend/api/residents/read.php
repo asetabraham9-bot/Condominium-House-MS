@@ -22,6 +22,7 @@ $query = "SELECT
             r.leave_date AS leaveDate,
             h.house_number AS houseNumber,
             h.id AS houseId,
+            h.house_type AS houseType,
             b.name AS blockName,
             b.id AS blockId,
             c.name AS campusName,

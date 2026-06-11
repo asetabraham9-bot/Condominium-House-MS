@@ -23,6 +23,7 @@ $query = "SELECT p.id, p.user_id as residentId, CONCAT(u.first_name, ' ', u.last
                  p.payment_method as paymentMethod, p.reference_number as referenceNumber,
                  p.payment_type, p.transaction_id, p.screenshot_path,
                  DATE_FORMAT(p.payment_date, '%M %Y') as month,
+                 u.campus_id as campusId,
                  c.name as campusName
           FROM payments p
           JOIN users u ON p.user_id = u.id

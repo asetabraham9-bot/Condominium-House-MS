@@ -155,7 +155,7 @@ export default function ManagerDashboard() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Manager Dashboard</h1>
-          <p className="text-slate-600">Overview of system-wide housing statistics and cycle applicants management.</p>
+          <p className="text-slate-600">Overview of CHMS-system-wide housing statistics and cycle applicants management.</p>
         </div>
 
         {/* Overall Stats Cards */}
@@ -193,7 +193,7 @@ export default function ManagerDashboard() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-800">Houses Availability Breakdown</h2>
+              <h2 className="text-lg font-bold text-slate-800">Houses Availability Breakdown Based On House Type</h2>
               <p className="text-xs text-slate-500 mt-0.5">System-wide totals across all campuses</p>
             </div>
           </div>
@@ -227,9 +227,9 @@ export default function ManagerDashboard() {
                         <span className="font-bold text-slate-600">{Math.round(occupancyRate)}%</span>
                       </div>
                       <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                        <div 
-                          className="bg-indigo-600 h-full rounded-full transition-all duration-500" 
-                          style={{ width: `${occupancyRate}%` }} 
+                        <div
+                          className="bg-indigo-600 h-full rounded-full transition-all duration-500"
+                          style={{ width: `${occupancyRate}%` }}
                         />
                       </div>
                     </div>
@@ -288,8 +288,8 @@ export default function ManagerDashboard() {
                         <td className="px-6 py-4 text-sm">
                           <span
                             className={`px-2.5 py-1 rounded-full text-xs font-bold ${app.status === 'open'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-slate-200 text-slate-800'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-slate-200 text-slate-800'
                               }`}
                           >
                             {app.status.toUpperCase()}
@@ -420,12 +420,12 @@ export default function ManagerDashboard() {
                                               <td className="px-4 py-3 text-center">
                                                 <span
                                                   className={`px-2 py-0.5 rounded text-[10px] font-bold ${applicant.status === 'placed'
-                                                      ? 'bg-green-100 text-green-800'
-                                                      : applicant.status === 'approved'
-                                                        ? 'bg-blue-100 text-blue-800'
-                                                        : applicant.status === 'rejected'
-                                                          ? 'bg-red-100 text-red-800'
-                                                          : 'bg-yellow-100 text-yellow-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : applicant.status === 'approved'
+                                                      ? 'bg-blue-100 text-blue-800'
+                                                      : applicant.status === 'rejected'
+                                                        ? 'bg-red-100 text-red-800'
+                                                        : 'bg-yellow-100 text-yellow-800'
                                                     }`}
                                                 >
                                                   {applicant.status.toUpperCase()}

@@ -115,9 +115,9 @@ export default function Dashboard() {
   const mySubmission = user ? applications.find((a) => a.applicantId === user.id && (a.cycleId === openCycle?.id || a.status === 'placed')) : undefined;
   const submissionComplete = Boolean(
     mySubmission &&
-      mySubmission.cycleId != null &&
-      String(mySubmission.cycleId).trim() !== '' &&
-      mySubmission.status !== 'rejected'
+    mySubmission.cycleId != null &&
+    String(mySubmission.cycleId).trim() !== '' &&
+    mySubmission.status !== 'rejected'
   );
 
   const currentScore = calculateTotalScore({
@@ -806,32 +806,31 @@ export default function Dashboard() {
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-1">
                               <span className="font-medium text-gray-900">{request.subject}</span>
-                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                request.priority === 'high' 
+                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${request.priority === 'high'
                                   ? 'bg-red-100 text-red-700'
                                   : request.priority === 'medium'
-                                  ? 'bg-yellow-100 text-yellow-700'
-                                  : 'bg-gray-100 text-gray-700'
-                              }`}>
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-gray-100 text-gray-700'
+                                }`}>
                                 {request.priority}
                               </span>
                             </div>
                             <p className="text-sm text-gray-600 mb-1">{request.description.substring(0, 100)}...</p>
                             <p className="text-xs text-gray-500">
-                              {request.requestType.charAt(0).toUpperCase() + request.requestType.slice(1)} • 
+                              {request.requestType.charAt(0).toUpperCase() + request.requestType.slice(1)} •
                               {new Date(request.dateSubmitted).toLocaleDateString()}
                             </p>
                           </div>
-                          <StatusBadge 
+                          <StatusBadge
                             status={request.status === 'in_progress' ? 'pending' as any : request.status as any}
                             label={
-                              request.status === 'in_progress' 
+                              request.status === 'in_progress'
                                 ? 'In Progress'
                                 : request.status === 'resolved'
-                                ? 'Resolved'
-                                : request.status === 'rejected'
-                                ? 'Rejected'
-                                : 'Pending'
+                                  ? 'Resolved'
+                                  : request.status === 'rejected'
+                                    ? 'Rejected'
+                                    : 'Pending'
                             }
                           />
                         </div>
@@ -888,11 +887,11 @@ export default function Dashboard() {
                           <StatusBadge
                             status={
                               app.status as
-                                | 'pending'
-                                | 'approved'
-                                | 'rejected'
-                                | 'lottery'
-                                | 'placed'
+                              | 'pending'
+                              | 'approved'
+                              | 'rejected'
+                              | 'lottery'
+                              | 'placed'
                             }
                           />
                         </div>
@@ -998,13 +997,12 @@ export default function Dashboard() {
                             ) : null}
                           </div>
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              open && !past
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${open && !past
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : open && past
                                   ? 'bg-amber-100 text-amber-900'
                                   : 'bg-slate-200 text-slate-700'
-                            }`}
+                              }`}
                           >
                             {open && !past ? 'Open' : open && past ? 'Open · deadline passed' : 'Closed'}
                           </span>
@@ -1012,7 +1010,7 @@ export default function Dashboard() {
                         {c.description ? (
                           <p className="text-sm text-slate-700 leading-relaxed">{c.description}</p>
                         ) : null}
-                        
+
                         {/* Display configurations if they exist */}
                         {c.houseConfigurations && c.houseConfigurations.length > 0 ? (
                           <div className="bg-white border border-slate-150 rounded-xl p-3.5 space-y-2.5">
@@ -1282,13 +1280,12 @@ export default function Dashboard() {
               {recentNotifications.map((notif) => (
                 <div
                   key={notif.id}
-                  className={`p-4 rounded-lg border-l-4 ${
-                    notif.type === 'success'
+                  className={`p-4 rounded-lg border-l-4 ${notif.type === 'success'
                       ? 'bg-green-50 border-green-500'
                       : notif.type === 'warning'
-                      ? 'bg-yellow-50 border-yellow-500'
-                      : 'bg-blue-50 border-blue-500'
-                  }`}
+                        ? 'bg-yellow-50 border-yellow-500'
+                        : 'bg-blue-50 border-blue-500'
+                    }`}
                 >
                   <p className="text-gray-900 font-medium">{notif.message}</p>
                   <p className="text-xs text-gray-600 mt-1">

@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router';
 import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Building2, Users, FileCheck, TrendingUp } from 'lucide-react';
+import { Users, FileCheck, TrendingUp, Building2 } from 'lucide-react';
+import wsuLogo from '../assets/wsu_logo.png';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ export default function LandingPage() {
       <header className="bg-white/10 backdrop-blur-sm border-b border-white/20">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <Building2 className="w-8 h-8 text-white" />
+            <img src={wsuLogo} alt="WSU Logo" className="w-10 h-10 rounded-full object-cover border-2 border-white/40" />
             <span className="text-white text-xl font-bold">OCHMS</span>
           </div>
           <div className="space-x-4">
@@ -59,6 +60,13 @@ export default function LandingPage() {
       {/* Hero Section */}
       <div className="container mx-auto px-6 py-20">
         <div className="text-center max-w-4xl mx-auto">
+          <div className="flex justify-center mb-8">
+            <img
+              src={wsuLogo}
+              alt="Wolaita Sodo University"
+              className="w-28 h-28 rounded-full object-cover border-4 border-white/30 shadow-2xl"
+            />
+          </div>
           <h1 className="text-5xl font-bold text-white mb-6">
             Online Condominium House Management System
           </h1>

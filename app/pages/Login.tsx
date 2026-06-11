@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
-import { Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from 'sonner';
+import wsuLogo from '../assets/wsu_logo.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -46,8 +46,8 @@ export default function Login() {
       <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8">
           <div className="flex flex-col items-center mb-8">
-            <div className="bg-blue-900 p-4 rounded-full mb-4">
-              <Building2 className="w-12 h-12 text-white" />
+            <div className="bg-white border-4 border-blue-900 p-1 rounded-full mb-4 shadow-lg">
+              <img src={wsuLogo} alt="WSU Logo" className="w-16 h-16 rounded-full object-cover" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">OCHMS Login</h1>
             <p className="text-gray-600 mt-2 text-center">

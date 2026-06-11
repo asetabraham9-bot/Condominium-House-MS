@@ -64,6 +64,10 @@ try {
         // Close other cycles
         $closeOthers = $db->prepare("UPDATE applications SET status = 'closed' WHERE id != :id");
         $closeOthers->execute([':id' => $id]);
+
+        // Clear old application fee payments
+        $deleteFees = $db->prepare("DELETE FROM payments WHERE payment_type = 'application_fee'");
+        $deleteFees->execute();
     }
 
     // Toggle status

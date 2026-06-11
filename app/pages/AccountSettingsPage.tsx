@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { Toaster } from 'sonner';
 import { API_BASE_URL } from '../lib/apiBase';
 
-type LayoutRole = 'applicant' | 'campus_admin' | 'chms_admin';
+type LayoutRole = 'applicant' | 'campus_admin' | 'chms_admin' | 'manager';
 
 type NotificationPreferences = {
   emailChannel: boolean;
@@ -140,7 +140,10 @@ export default function AccountSettingsPage({ layoutRole }: Props) {
 
   useEffect(() => {
     const expected: UserRole =
-      layoutRole === 'chms_admin' ? 'chms_admin' : layoutRole === 'campus_admin' ? 'campus_admin' : 'applicant';
+      layoutRole === 'chms_admin' ? 'chms_admin'
+      : layoutRole === 'campus_admin' ? 'campus_admin'
+      : layoutRole === 'manager' ? 'manager'
+      : 'applicant';
 
     if (!user || user.role !== expected) {
       navigate('/login');
@@ -398,7 +401,9 @@ export default function AccountSettingsPage({ layoutRole }: Props) {
       ? 'Applicant Portal'
       : layoutRole === 'campus_admin'
         ? 'Campus administration'
-        : 'CHMS system administration';
+        : layoutRole === 'manager'
+          ? 'Manager Portal'
+          : 'CHMS system administration';
 
   if (!user || loading) {
     return (
