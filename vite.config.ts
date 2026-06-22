@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      // Dev server runs on :5173; PHP lives under XAMPP Apache (same paths as production).
+      // Dev server runs on :4000; PHP lives under XAMPP Apache (same paths as production).
       '/REALPRO/php_backend': {
         target: 'http://localhost',
         changeOrigin: true,

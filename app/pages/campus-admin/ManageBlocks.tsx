@@ -32,7 +32,7 @@ export default function ManageBlocks() {
   // Form states
   const [blockData, setBlockData] = useState<Partial<Block>>({
     blockName: '',
-    totalHouses: 15,
+    totalHouses: 0,
   });
   
   const [houseData, setHouseData] = useState<Partial<House>>({

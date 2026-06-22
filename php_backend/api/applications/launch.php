@@ -175,9 +175,10 @@ try {
     $close = $db->prepare("UPDATE applications SET status = 'closed' WHERE status = 'open'");
     $close->execute();
 
-    // Clear old application fee payments
-    $deleteFees = $db->prepare("DELETE FROM payments WHERE payment_type = 'application_fee'");
-    $deleteFees->execute();
+// // Clear old application fee payments
+// // $deleteFees = $db->prepare("DELETE FROM payments WHERE payment_type = 'application_fee'");
+// // $deleteFees->execute(); // Retain payment history until deadline.
+
 
     $q = "INSERT INTO applications (
             title, round_label, description, house_details,

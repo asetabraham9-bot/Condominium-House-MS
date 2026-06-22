@@ -65,9 +65,9 @@ try {
         $closeOthers = $db->prepare("UPDATE applications SET status = 'closed' WHERE id != :id");
         $closeOthers->execute([':id' => $id]);
 
-        // Clear old application fee payments
-        $deleteFees = $db->prepare("DELETE FROM payments WHERE payment_type = 'application_fee'");
-        $deleteFees->execute();
+        // // Clear old application fee payments
+        // // $deleteFees = $db->prepare("DELETE FROM payments WHERE payment_type = 'application_fee'");
+        // // $deleteFees->execute(); // Retain payment history until deadline.
     }
 
     // Toggle status

@@ -27,7 +27,7 @@ $total_houses_int = is_numeric($total_houses_raw) ? (int)$total_houses_raw : 0;
 if(
     $campus_id_raw !== null && $campus_id_raw !== '' &&
     $name_raw !== null && trim((string)$name_raw) !== '' &&
-    $total_houses_int > 0
+    $total_houses_int >= 0
 ){
     $query = "INSERT INTO blocks
             SET

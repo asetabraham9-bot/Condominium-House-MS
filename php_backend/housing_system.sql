@@ -276,46 +276,6 @@ CREATE TABLE notifications (
     ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- Seed campuses (match Register dropdown labels; IDs 1-4 used by frontend)
-INSERT INTO campuses (id, name, location) VALUES
-  (1, 'Main', 'Main Campus'),
-  (2, 'Techno', 'Techno Campus'),
-  (3, 'Otona', 'Otona Campus'),
-  (4, 'Tercha', 'Tercha Campus');
-
--- password for seed users: password
-SET @pwd := '$2y$10$5f0Qh1jME5j6Q6pUr6l1euk9v2vR6j0dN4nO8H3E0iWm1Qx7lX9vO';
-
-INSERT INTO users (first_name, last_name, email, password_hash, phone_number, role, campus_id) VALUES
-  ('System', 'Admin', 'admin@wsu.edu', @pwd, '+251900000001', 'system_admin', NULL),
-  ('Campus', 'Admin', 'campus@wsu.edu', @pwd, '+251900000002', 'campus_admin', 1),
-  ('Applicant', 'User', 'applicant@wsu.edu', @pwd, '+251900000003', 'applicant', 1),
-  ('System', 'Manager', 'manager@chms.wsu.edu', @pwd, '0935451235', 'manager', NULL);
-
-INSERT INTO applications (
-  title, round_label, description, house_details,
-  monthly_payment, application_fee, electricity_service, water_service,
-  house_type, campus_id, block_id, house_number, bedrooms, bathrooms,
-  deadline, status
-) VALUES (
-  '2026 Housing Cycle',
-  'Round 1',
-  'Annual housing application cycle',
-  'University condominium allocation',
-  3500.00,
-  500.00,
-  'Three-phase supply to unit',
-  'Municipal + backup tank',
-  'Two Bedroom',
-  1,
-  NULL,
-  'TBD',
-  2,
-  2,
-  DATE_ADD(NOW(), INTERVAL 30 DAY),
-  'open'
-);
-
 CREATE TABLE application_houses (
   id INT AUTO_INCREMENT PRIMARY KEY,
   application_id INT NOT NULL,

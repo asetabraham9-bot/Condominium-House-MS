@@ -70,18 +70,10 @@ export default function Payment() {
       return;
     }
 
-    const isCbe = paymentMethod === 'CBE' || paymentMethod === 'CBE Birr';
-    const requiredLength = isCbe ? 12 : 10;
+// Validation for transaction ID is now flexible: any format and length are accepted.
+    // Previously required FT prefix and fixed length; removed to allow any ID.
+    // No further checks needed here.
 
-    if (!transactionId.startsWith('FT')) {
-      toast.error('Transaction ID must start with "FT".');
-      return;
-    }
-
-    if (transactionId.length !== requiredLength) {
-      toast.error(`Transaction ID must be exactly ${requiredLength} characters for ${paymentMethod}.`);
-      return;
-    }
 
     if (!screenshot) {
       toast.error('Please upload a screenshot of your transaction receipt.');
@@ -307,12 +299,11 @@ export default function Payment() {
                       type="text"
                       value={transactionId}
                       onChange={(e) => setTransactionId(e.target.value.toUpperCase())}
-                      placeholder={paymentMethod === 'Tele Birr' ? "e.g. FT26124F39" : "e.g. FT26124F3918"}
-                      maxLength={paymentMethod === 'Tele Birr' ? 10 : 12}
+                      placeholder="Enter transaction ID"
                       required
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono font-bold tracking-widest uppercase placeholder:font-sans placeholder:tracking-normal placeholder:font-normal"
                     />
-                    <p className="text-xs text-gray-500 font-medium">Must be exactly {paymentMethod === 'Tele Birr' ? '10' : '12'} characters starting with "FT"</p>
+                    <p className="text-xs text-gray-500 font-medium">Enter the transaction ID as provided by your payment method.</p>
                   </div>
                 </div>
 
@@ -371,7 +362,7 @@ export default function Payment() {
                 <div className="flex items-center justify-end pt-6 border-t border-gray-100">
                   <button
                     type="submit"
-                    disabled={isSubmitting || !screenshot || (paymentMethod === 'Tele Birr' ? transactionId.length !== 10 : transactionId.length !== 12)}
+                    disabled={isSubmitting || !screenshot}
                     className="w-full md:w-auto flex items-center justify-center space-x-2 px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
                   >
                     <ShieldCheck className={`w-6 h-6 ${isSubmitting ? 'animate-pulse' : ''}`} />
