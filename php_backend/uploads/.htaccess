@@ -1,4 +1,0 @@
-# Allow direct access to uploaded images (XAMPP / Apache)
-<IfModule mod_authz_core.c>
-  Require all granted
-</IfModule>
