@@ -248,7 +248,9 @@ export default function ManageBlocks() {
             
             {blocks.map((block) => {
               const blockHouses = houses.filter((h) => h.blockId === block.id);
+              const totalCount = blockHouses.length;
               const occupiedCount = blockHouses.filter((h) => h.status === 'occupied').length;
+              const availableCount = blockHouses.filter((h) => h.status === 'available').length;
               const isExpanded = expandedBlockId === block.id;
 
               return (
@@ -273,7 +275,7 @@ export default function ManageBlocks() {
                       <div className="flex space-x-6 text-center">
                         <div>
                           <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider mb-1">Total</p>
-                          <p className="text-xl font-bold text-gray-900">{block.totalHouses}</p>
+                          <p className="text-xl font-bold text-gray-900">{totalCount}</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider mb-1">Occupied</p>
@@ -281,7 +283,7 @@ export default function ManageBlocks() {
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider mb-1">Available</p>
-                          <p className="text-xl font-bold text-emerald-500">{block.totalHouses - occupiedCount}</p>
+                          <p className="text-xl font-bold text-emerald-500">{availableCount}</p>
                         </div>
                       </div>
                       

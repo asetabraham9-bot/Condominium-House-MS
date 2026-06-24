@@ -16,9 +16,27 @@ $db = $database->getConnection();
 
 $campus_id = isset($_GET['campus_id']) ? $_GET['campus_id'] : null;
 
-$query = "SELECT b.id, b.name as blockName, b.total_houses, b.occupied_houses, b.available_houses, c.name as campus, b.campus_id, b.created_at, b.updated_at 
+$query = "SELECT 
+            b.id, 
+            b.name as blockName, 
+            COALESCE(h_counts.total_houses, 0) as total_houses,
+            COALESCE(h_counts.occupied_houses, 0) as occupied_houses,
+            COALESCE(h_counts.available_houses, 0) as available_houses,
+            c.name as campus, 
+            b.campus_id, 
+            b.created_at, 
+            b.updated_at 
           FROM blocks b
-          JOIN campuses c ON b.campus_id = c.id";
+          JOIN campuses c ON b.campus_id = c.id
+          LEFT JOIN (
+              SELECT 
+                  block_id,
+                  COUNT(*) as total_houses,
+                  SUM(CASE WHEN status = 'occupied' THEN 1 ELSE 0 END) as occupied_houses,
+                  SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_houses
+              FROM houses
+              GROUP BY block_id
+          ) h_counts ON b.id = h_counts.block_id";
 
 if ($campus_id) {
     $query .= " WHERE b.campus_id = :campus_id";

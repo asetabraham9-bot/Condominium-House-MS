@@ -8,7 +8,7 @@ import { Building2, Users, DollarSign, ClipboardList } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { blocks, residents, payments } = useData();
+  const { blocks, houses, residents, payments } = useData();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,7 +19,12 @@ export default function Dashboard() {
 
   const activeResidents = residents.filter((r) => r.residenceStatus === 'active');
   const pendingPayments = payments.filter((p) => p.paymentStatus === 'pending');
-  const totalHouses = blocks.reduce((sum, block) => sum + block.totalHouses, 0);
+  // Derive house stats from the live houses array (updates with refreshData)
+  const campusId = user?.campusId;
+  const campusHouses = campusId ? houses.filter((h) => h.campusId === campusId) : houses;
+  const totalHouses = campusHouses.length;
+  const availableHouses = campusHouses.filter((h) => h.status === 'available').length;
+  const occupiedHouses = campusHouses.filter((h) => h.status === 'occupied').length;
 
   return (
     <Layout role="campus_admin">
@@ -28,7 +33,7 @@ export default function Dashboard() {
         <p className="text-gray-600 mb-8">Manage blocks, residents, and campus operations</p>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
           <StatCard
             icon={Building2}
             iconColor="text-blue-600"
@@ -37,9 +42,21 @@ export default function Dashboard() {
           />
           <StatCard
             icon={Building2}
-            iconColor="text-green-600"
+            iconColor="text-gray-600"
             title="Total Houses"
             value={totalHouses}
+          />
+          <StatCard
+            icon={Building2}
+            iconColor="text-green-600"
+            title="Available Houses"
+            value={availableHouses}
+          />
+          <StatCard
+            icon={Building2}
+            iconColor="text-red-500"
+            title="Occupied Houses"
+            value={occupiedHouses}
           />
           <StatCard
             icon={Users}
@@ -84,13 +101,18 @@ export default function Dashboard() {
         <div className="bg-white p-6 rounded-lg shadow border border-gray-200 mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Blocks Overview</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {blocks.slice(0, 6).map((block) => (
-              <div key={block.id} className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-bold text-gray-900 mb-1">{block.blockName}</h3>
-                <p className="text-sm text-gray-600">Houses: {block.totalHouses}</p>
-                <p className="text-sm text-gray-600">Campus: {block.campus}</p>
-              </div>
-            ))}
+            {blocks.slice(0, 6).map((block) => {
+              const blockHouseCount = houses.filter((h) => h.blockId === block.id).length;
+              const blockAvailable = houses.filter((h) => h.blockId === block.id && h.status === 'available').length;
+              return (
+                <div key={block.id} className="p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-bold text-gray-900 mb-1">{block.blockName}</h3>
+                  <p className="text-sm text-gray-600">Total Houses: <span className="font-semibold text-gray-800">{blockHouseCount}</span></p>
+                  <p className="text-sm text-gray-600">Available: <span className="font-semibold text-green-600">{blockAvailable}</span></p>
+                  <p className="text-sm text-gray-600">Campus: {block.campus}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
 

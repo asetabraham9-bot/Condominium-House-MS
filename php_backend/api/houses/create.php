@@ -77,6 +77,9 @@ if($block_id && $house_number){
                 }
             }
 
+            // Increment the block counts (available_houses and total_houses)
+            $db->query("UPDATE blocks SET total_houses = total_houses + 1, available_houses = available_houses + 1 WHERE id = " . intval($block_id));
+
             $db->commit();
             http_response_code(201);
             echo json_encode(array("message" => "House created successfully.", "id" => $house_id));

@@ -27,14 +27,17 @@ if($id){
 
         if($stmt->execute([':id' => $id])){
             // Decrement the block counts
-            $blockId = $house['block_id'];
+            $blockId = intval($house['block_id']);
             if($house['status'] === 'available') {
-                $db->query("UPDATE blocks SET available_houses = GREATEST(0, available_houses - 1) WHERE id = $blockId");
+                $q = $db->prepare("UPDATE blocks SET available_houses = GREATEST(0, available_houses - 1) WHERE id = :bid");
+                $q->execute([':bid' => $blockId]);
             } else {
-                $db->query("UPDATE blocks SET occupied_houses = GREATEST(0, occupied_houses - 1) WHERE id = $blockId");
+                $q = $db->prepare("UPDATE blocks SET occupied_houses = GREATEST(0, occupied_houses - 1) WHERE id = :bid");
+                $q->execute([':bid' => $blockId]);
             }
             // Also decrement total
-            $db->query("UPDATE blocks SET total_houses = GREATEST(0, total_houses - 1) WHERE id = $blockId");
+            $q_tot = $db->prepare("UPDATE blocks SET total_houses = GREATEST(0, total_houses - 1) WHERE id = :bid");
+            $q_tot->execute([':bid' => $blockId]);
 
             http_response_code(200);
             echo json_encode(["message" => "House deleted successfully."]);
