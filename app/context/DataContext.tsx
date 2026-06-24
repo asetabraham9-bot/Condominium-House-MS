@@ -14,6 +14,13 @@ export interface Application {
   childrenCount?: number;
   jobResponsibility: string;
   isDisabled: boolean;
+  gender?: string | null;
+  disabilityType?: string | null;
+  houseType?: string | null;
+  preferredCampusId?: string | null;
+  preferredCampusName?: string | null;
+  applicantCampusId?: string | null;
+  applicantCampusName?: string | null;
   applicantName: string;
   cycleId?: string | null;
   cycleTitle?: string | null;
@@ -365,15 +372,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       if (housesResult?.records) {
         setHouses(
-          housesResult.records.map((house) => ({
-            ...house,
-            houseType: normalizeHouseType(
-              (house as { house_type?: string }).house_type ?? house.houseType
-            ),
-            campusId: (house as { campusId?: string }).campusId
-              ? String((house as { campusId?: string }).campusId)
-              : undefined,
-          }))
+          housesResult.records.map((house) => {
+            const raw = house as House & {
+              house_type?: string;
+              monthly_payment?: string | number;
+              electric_service?: string;
+              water_service?: string;
+            };
+            return {
+              ...house,
+              houseType: normalizeHouseType(raw.house_type ?? house.houseType),
+              monthlyPayment: Number(raw.monthly_payment ?? house.monthlyPayment ?? 0),
+              electricService: String(raw.electric_service ?? house.electricService ?? 'yes'),
+              waterService: String(raw.water_service ?? house.waterService ?? 'yes'),
+              campusId: raw.campusId ? String(raw.campusId) : undefined,
+            };
+          })
         );
       }
 

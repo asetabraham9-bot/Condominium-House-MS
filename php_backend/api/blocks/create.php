@@ -59,6 +59,6 @@ if(
     }
 } else{
     http_response_code(400);
-    echo json_encode(array("message" => "Unable to create block. Data is incomplete.", "required" => ["campus_id", "name", "total_houses>0"]));
+    echo json_encode(array("message" => "Unable to create block. Data is incomplete.", "required" => ["campus_id", "name", "total_houses>=0"]));
 }
 ?>

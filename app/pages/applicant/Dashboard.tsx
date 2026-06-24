@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { Toaster } from 'sonner';
 import { API_BASE_URL, uploadsPublicUrl } from '../../lib/apiBase';
 import { calculateTotalScore, getScoreBreakdown } from '../../utils/scoreCalculator';
+import { getHouseOfferingOptions, parseOfferingValue } from '../../utils/houseOfferings';
 
 function ynLabel(value: string | null | undefined): string {
   if (value == null || value === '') return '—';
@@ -76,6 +77,9 @@ export default function Dashboard() {
     jobResponsibility: user?.jobResponsibility || '',
     isDisabled: user?.isDisabled || false,
     disabilityType: user?.disabilityType || '',
+    houseType: '',
+    preferredCampusId: user?.campusId || '',
+    preferredOffering: '',
   });
 
   useEffect(() => {
@@ -112,6 +116,9 @@ export default function Dashboard() {
   const deadlineOk = deadlineMs == null || !Number.isFinite(deadlineMs) || deadlineMs >= Date.now();
   const canApply = Boolean(openCycle && deadlineOk);
 
+  const applicantCampusName = campuses.find((c) => c.id === user?.campusId)?.name;
+  const houseOfferingOptions = getHouseOfferingOptions(openCycle, user?.campusId ?? undefined, applicantCampusName);
+
   const mySubmission = user ? applications.find((a) => a.applicantId === user.id && (a.cycleId === openCycle?.id || a.status === 'placed')) : undefined;
   const submissionComplete = Boolean(
     mySubmission &&
@@ -132,6 +139,18 @@ export default function Dashboard() {
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+
+    if (name === 'preferredOffering') {
+      const { houseType, preferredCampusId } = parseOfferingValue(value);
+      setFormData({
+        ...formData,
+        preferredOffering: value,
+        houseType,
+        preferredCampusId,
+      });
+      return;
+    }
+
     setFormData({
       ...formData,
       [name]:
@@ -173,6 +192,8 @@ export default function Dashboard() {
           jobResponsibility: formData.jobResponsibility,
           isDisabled: formData.isDisabled,
           disabilityType: formData.disabilityType,
+          houseType: formData.houseType,
+          preferredCampusId: formData.preferredCampusId || null,
           score: currentScore,
         }),
       });
@@ -452,6 +473,26 @@ export default function Dashboard() {
                     <h3 className="font-bold text-slate-800 text-base border-b border-slate-100 pb-2">
                       Eligibility Profile & Questionnaire
                     </h3>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Preferred House Type & Campus <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="preferredOffering"
+                        value={formData.preferredOffering}
+                        onChange={handleFormChange}
+                        required
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                      >
+                        <option value="">Select the house type you are applying for</option>
+                        {houseOfferingOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
@@ -897,6 +938,13 @@ export default function Dashboard() {
                         </div>
                         <p className="text-sm text-slate-600">
                           Submitted {new Date(app.applicationDate).toLocaleDateString()} · Selection Score: <span className="font-bold text-indigo-600">{app.score}</span> / 100
+                          {app.houseType ? (
+                            <>
+                              {' '}
+                              · Applied for <span className="font-semibold text-slate-800">{app.houseType}</span>
+                              {app.preferredCampusName ? ` at ${app.preferredCampusName}` : ''}
+                            </>
+                          ) : null}
                         </p>
                         {app.cycleDescription ? (
                           <p className="text-sm text-slate-700">{app.cycleDescription}</p>
@@ -922,8 +970,14 @@ export default function Dashboard() {
                           ) : null}
                           {app.cycleHouseType ? (
                             <>
-                              <dt className="text-slate-500">House type</dt>
+                              <dt className="text-slate-500">Cycle house type</dt>
                               <dd className="font-medium">{app.cycleHouseType}</dd>
+                            </>
+                          ) : null}
+                          {app.houseType ? (
+                            <>
+                              <dt className="text-slate-500">Applied house type</dt>
+                              <dd className="font-medium">{app.houseType}</dd>
                             </>
                           ) : null}
                           <dt className="text-slate-500">Electric / water</dt>

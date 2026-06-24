@@ -6,6 +6,7 @@ import Layout from '../../components/Layout';
 import { toast } from 'sonner';
 import { Toaster } from 'sonner';
 import { calculateTotalScore, getScoreBreakdown } from '../../utils/scoreCalculator';
+import { getHouseOfferingOptions, parseOfferingValue } from '../../utils/houseOfferings';
 import { API_BASE_URL, uploadsPublicUrl } from '../../lib/apiBase';
 import {
   ArrowRight,
@@ -49,7 +50,12 @@ export default function ApplyHouse() {
     jobResponsibility: user?.jobResponsibility || '',
     isDisabled: user?.isDisabled || false,
     disabilityType: user?.disabilityType || '',
+    houseType: '',
+    preferredCampusId: user?.campusId || '',
+    preferredOffering: '',
   });
+
+  const houseOfferingOptions = getHouseOfferingOptions(openCycle, user?.campusId ?? undefined);
 
   useEffect(() => {
     if (!user || user.role !== 'applicant') {
@@ -85,6 +91,18 @@ export default function ApplyHouse() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+
+    if (name === 'preferredOffering') {
+      const { houseType, preferredCampusId } = parseOfferingValue(value);
+      setFormData({
+        ...formData,
+        preferredOffering: value,
+        houseType,
+        preferredCampusId,
+      });
+      return;
+    }
+
     setFormData({
       ...formData,
       [name]:
@@ -127,6 +145,8 @@ export default function ApplyHouse() {
           jobResponsibility: formData.jobResponsibility,
           isDisabled: formData.isDisabled,
           disabilityType: formData.disabilityType,
+          houseType: formData.houseType,
+          preferredCampusId: formData.preferredCampusId || null,
           score: currentScore,
         }),
       });
@@ -199,6 +219,13 @@ export default function ApplyHouse() {
                     <p className="text-sm text-slate-600 mt-2">
                       Submitted on {new Date(mySubmission.applicationDate).toLocaleDateString()} · Eligibility score{' '}
                       <span className="font-bold text-indigo-600">{mySubmission.score}</span> / 100
+                      {mySubmission.houseType ? (
+                        <>
+                          {' '}
+                          · Applied for <span className="font-semibold text-slate-800">{mySubmission.houseType}</span>
+                          {mySubmission.preferredCampusName ? ` at ${mySubmission.preferredCampusName}` : ''}
+                        </>
+                      ) : null}
                     </p>
                   </div>
                   <div className="shrink-0 rounded-xl bg-white border border-slate-100 px-6 py-4 text-center shadow-sm">
@@ -459,6 +486,26 @@ export default function ApplyHouse() {
               >
                 <div className="space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Preferred house type & campus <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="preferredOffering"
+                        value={formData.preferredOffering}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition"
+                      >
+                        <option value="">Select the house type you are applying for</option>
+                        {houseOfferingOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Gender <span className="text-red-500">*</span>

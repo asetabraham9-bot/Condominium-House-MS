@@ -22,7 +22,9 @@ if(
     isset($data->maritalStatus) &&
     isset($data->childrenCount) &&
     isset($data->jobResponsibility) &&
-    isset($data->score)
+    isset($data->score) &&
+    isset($data->houseType) &&
+    trim((string)$data->houseType) !== ''
 ){
     try {
         // 1. Verify there is an OPEN cycle whose deadline has not passed
@@ -41,6 +43,44 @@ if(
         
         $cycle_row = $stmt_cycle->fetch(PDO::FETCH_ASSOC);
         $cycle_id = $cycle_row['id'];
+
+        $house_type = trim((string)$data->houseType);
+        $preferred_campus_id = isset($data->preferredCampusId) && $data->preferredCampusId !== ''
+            ? (int)$data->preferredCampusId
+            : null;
+
+        // Validate house type against cycle offerings when configured
+        $q_conf = "SELECT house_type, campus_id FROM application_houses WHERE application_id = :cid";
+        $stmt_conf = $db->prepare($q_conf);
+        $stmt_conf->execute([':cid' => (int)$cycle_id]);
+        $cycle_offerings = $stmt_conf->fetchAll(PDO::FETCH_ASSOC);
+
+        if (count($cycle_offerings) > 0) {
+            $offering_match = false;
+            foreach ($cycle_offerings as $offering) {
+                if (
+                    strcasecmp((string)$offering['house_type'], $house_type) === 0 &&
+                    ($preferred_campus_id === null || (int)$offering['campus_id'] === $preferred_campus_id)
+                ) {
+                    $offering_match = true;
+                    $preferred_campus_id = (int)$offering['campus_id'];
+                    break;
+                }
+            }
+            if (!$offering_match) {
+                http_response_code(400);
+                echo json_encode(["message" => "Please select a valid house type and campus from this cycle's offerings."]);
+                exit();
+            }
+        } elseif ($preferred_campus_id === null) {
+            $q_user_campus = "SELECT campus_id FROM users WHERE id = :uid LIMIT 1";
+            $stmt_user_campus = $db->prepare($q_user_campus);
+            $stmt_user_campus->execute([':uid' => (int)$data->userId]);
+            $user_row = $stmt_user_campus->fetch(PDO::FETCH_ASSOC);
+            if (!empty($user_row['campus_id'])) {
+                $preferred_campus_id = (int)$user_row['campus_id'];
+            }
+        }
 
         // 2. STRICT ENFORCEMENT: One Applicant, One Application Relationship
         // Check if the user already has an application that is NOT rejected
@@ -83,6 +123,8 @@ if(
                     `years_of_service` = :years,
                     `marital_status` = :marital,
                     `children_count` = :children_count,
+                    `house_type` = :house_type,
+                    `preferred_campus_id` = :preferred_campus_id,
                     `job_responsibility` = :job,
                     `is_disabled` = :disabled,
                     `disability_type` = :disability_type,
@@ -98,6 +140,8 @@ if(
         $stmt->bindValue(":years", (int)$data->yearsOfService, PDO::PARAM_INT);
         $stmt->bindValue(":marital", $data->maritalStatus);
         $stmt->bindValue(":children_count", (int)$data->childrenCount, PDO::PARAM_INT);
+        $stmt->bindValue(":house_type", $house_type);
+        $stmt->bindValue(":preferred_campus_id", $preferred_campus_id, $preferred_campus_id === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $stmt->bindValue(":job", $data->jobResponsibility);
         $stmt->bindValue(":disabled", (!empty($data->isDisabled) ? 1 : 0), PDO::PARAM_INT);
         $stmt->bindValue(":disability_type", isset($data->disabilityType) && trim((string)$data->disabilityType) !== '' ? trim((string)$data->disabilityType) : null);

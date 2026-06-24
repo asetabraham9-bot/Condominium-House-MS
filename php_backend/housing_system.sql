@@ -83,6 +83,8 @@ CREATE TABLE applicant_details (
   is_disabled TINYINT(1) NOT NULL DEFAULT 0,
   disability_type VARCHAR(100) NULL,
   children_count INT NOT NULL DEFAULT 0,
+  house_type VARCHAR(100) NULL,
+  preferred_campus_id INT NULL,
   status ENUM('pending', 'approved', 'rejected', 'lottery_won', 'placed') NOT NULL DEFAULT 'pending',
   score DECIMAL(10,2) NOT NULL DEFAULT 0,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -92,6 +94,9 @@ CREATE TABLE applicant_details (
     ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT fk_applicant_details_application
     FOREIGN KEY (application_id) REFERENCES applications(id)
+    ON UPDATE CASCADE ON DELETE SET NULL,
+  CONSTRAINT fk_applicant_details_preferred_campus
+    FOREIGN KEY (preferred_campus_id) REFERENCES campuses(id)
     ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB;
 

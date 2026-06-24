@@ -45,12 +45,22 @@ $query = "SELECT
             ad.years_of_service as yearsOfService,
             ad.marital_status as maritalStatus,
             ad.job_responsibility as jobResponsibility,
-            ad.is_disabled as isDisabled
+            ad.is_disabled as isDisabled,
+            ad.gender,
+            ad.children_count as childrenCount,
+            ad.disability_type as disabilityType,
+            ad.house_type as houseType,
+            ad.preferred_campus_id as preferredCampusId,
+            pc.name AS preferredCampusName,
+            u.campus_id as applicantCampusId,
+            uc.name AS applicantCampusName
           FROM applicant_details ad
           JOIN users u ON ad.user_id = u.id
           LEFT JOIN applications a ON ad.application_id = a.id
           LEFT JOIN campuses c ON a.campus_id = c.id
           LEFT JOIN blocks b ON a.block_id = b.id
+          LEFT JOIN campuses pc ON ad.preferred_campus_id = pc.id
+          LEFT JOIN campuses uc ON u.campus_id = uc.id
           WHERE ad.application_id IS NOT NULL";
 
 if ($applicantId) {
@@ -111,6 +121,16 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         "maritalStatus" => $row['maritalStatus'],
         "jobResponsibility" => $row['jobResponsibility'],
         "isDisabled" => (bool)$row['isDisabled'],
+        "gender" => isset($row['gender']) ? $row['gender'] : null,
+        "childrenCount" => isset($row['childrenCount']) ? (int)$row['childrenCount'] : 0,
+        "disabilityType" => isset($row['disabilityType']) ? $row['disabilityType'] : null,
+        "houseType" => isset($row['houseType']) ? $row['houseType'] : null,
+        "preferredCampusId" => isset($row['preferredCampusId']) && $row['preferredCampusId'] !== null
+            ? (string)$row['preferredCampusId'] : null,
+        "preferredCampusName" => isset($row['preferredCampusName']) ? $row['preferredCampusName'] : null,
+        "applicantCampusId" => isset($row['applicantCampusId']) && $row['applicantCampusId'] !== null
+            ? (string)$row['applicantCampusId'] : null,
+        "applicantCampusName" => isset($row['applicantCampusName']) ? $row['applicantCampusName'] : null,
     );
 
     array_push($applications_arr["records"], $app_item);
