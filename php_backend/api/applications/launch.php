@@ -134,24 +134,23 @@ if (!is_array($houseConfigurations)) {
     $houseConfigurations = [];
 }
 
-// Map the first configuration to legacy columns for backward compatibility
-$firstConfig = count($houseConfigurations) > 0 ? $houseConfigurations[0] : null;
+$launchedByRaw = $pick('launchedBy');
+$launchedBy = $launchedByRaw !== '' && $launchedByRaw !== null ? (int)$launchedByRaw : null;
 
-$houseType = $firstConfig ? $firstConfig['houseType'] : $pick('houseType');
-if ($houseType === '') {
-    $houseType = null;
+$selectedHouseIdsRaw = $pick('selectedHouseIds', '[]');
+$selectedHouseIds = json_decode($selectedHouseIdsRaw, true);
+if (!is_array($selectedHouseIds)) {
+    $selectedHouseIds = [];
 }
+$selectedHouseIds = array_values(array_unique(array_filter(array_map('intval', $selectedHouseIds), static function ($id) {
+    return $id > 0;
+})));
 
-$campusId = $firstConfig ? (int)$firstConfig['campusId'] : null;
-if (!$campusId) {
-    $campusIdRaw = $isMultipart ? ($post['campusId'] ?? '') : ($data->campusId ?? '');
-    $campusId = $campusIdRaw !== '' && $campusIdRaw !== null ? (int)$campusIdRaw : null;
+if (count($selectedHouseIds) === 0 && count($houseConfigurations) === 0) {
+    http_response_code(400);
+    echo json_encode(["message" => "Select at least one available house for this cycle."]);
+    exit();
 }
-if ($campusId === 0) {
-    $campusId = null;
-}
-
-$monthly = $firstConfig ? (float)$firstConfig['monthlyPayment'] : $pickNum('monthlyPayment');
 
 $blockIdRaw = $isMultipart ? ($post['blockId'] ?? '') : ($data->blockId ?? '');
 $blockId = $blockIdRaw !== '' && $blockIdRaw !== null ? (int)$blockIdRaw : null;
@@ -167,10 +166,85 @@ if ($houseNumber === '') {
 $bedrooms = $pickIntNullable('bedrooms');
 $bathrooms = $pickIntNullable('bathrooms');
 
-$launchedBy = $launchedByRaw !== '' && $launchedByRaw !== null ? (int)$launchedByRaw : null;
-
 try {
     $db->beginTransaction();
+
+    $resolvedHouses = [];
+    if (count($selectedHouseIds) > 0) {
+        $placeholders = implode(',', array_fill(0, count($selectedHouseIds), '?'));
+        $houseQuery = "SELECT
+                h.id,
+                h.house_number,
+                h.house_type,
+                h.monthly_payment,
+                h.bedrooms,
+                h.bathrooms,
+                h.electric_service,
+                h.water_service,
+                h.status,
+                b.name AS block_name,
+                b.campus_id,
+                c.name AS campus_name
+            FROM houses h
+            JOIN blocks b ON h.block_id = b.id
+            JOIN campuses c ON b.campus_id = c.id
+            WHERE h.id IN ($placeholders)";
+        $houseStmt = $db->prepare($houseQuery);
+        foreach ($selectedHouseIds as $index => $houseId) {
+            $houseStmt->bindValue($index + 1, $houseId, PDO::PARAM_INT);
+        }
+        $houseStmt->execute();
+        $resolvedHouses = $houseStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (count($resolvedHouses) !== count($selectedHouseIds)) {
+            throw new Exception('One or more selected houses could not be found.');
+        }
+
+        foreach ($resolvedHouses as $houseRow) {
+            if (($houseRow['status'] ?? '') !== 'available') {
+                throw new Exception('Only available houses can be added to a cycle. House #' . $houseRow['house_number'] . ' is not available.');
+            }
+        }
+
+        $houseConfigurations = [];
+        $grouped = [];
+        foreach ($resolvedHouses as $houseRow) {
+            $rowHouseType = trim((string)$houseRow['house_type']);
+            $campusIdForGroup = (int)$houseRow['campus_id'];
+            $monthlyPayment = isset($houseRow['monthly_payment']) ? (float)$houseRow['monthly_payment'] : 0.0;
+            $groupKey = strtolower($rowHouseType) . '|' . $campusIdForGroup . '|' . number_format($monthlyPayment, 2, '.', '');
+
+            if (!isset($grouped[$groupKey])) {
+                $grouped[$groupKey] = [
+                    'houseType' => $rowHouseType !== '' ? $rowHouseType : 'House',
+                    'campusId' => (string)$campusIdForGroup,
+                    'campusName' => (string)$houseRow['campus_name'],
+                    'monthlyPayment' => $monthlyPayment,
+                    'numberOfHouses' => 0,
+                ];
+            }
+            $grouped[$groupKey]['numberOfHouses']++;
+        }
+        $houseConfigurations = array_values($grouped);
+    }
+
+    $firstConfig = count($houseConfigurations) > 0 ? $houseConfigurations[0] : null;
+
+    $houseType = $firstConfig ? $firstConfig['houseType'] : $pick('houseType');
+    if ($houseType === '') {
+        $houseType = null;
+    }
+
+    $campusId = $firstConfig ? (int)$firstConfig['campusId'] : null;
+    if (!$campusId) {
+        $campusIdRaw = $isMultipart ? ($post['campusId'] ?? '') : ($data->campusId ?? '');
+        $campusId = $campusIdRaw !== '' && $campusIdRaw !== null ? (int)$campusIdRaw : null;
+    }
+    if ($campusId === 0) {
+        $campusId = null;
+    }
+
+    $monthly = $firstConfig ? (float)$firstConfig['monthlyPayment'] : $pickNum('monthlyPayment');
 
     $close = $db->prepare("UPDATE applications SET status = 'closed' WHERE status = 'open'");
     $close->execute();
@@ -225,6 +299,16 @@ try {
                 ':campus_id' => (int)$conf['campusId'],
                 ':payment' => (float)$conf['monthlyPayment'],
                 ':num' => (int)$conf['numberOfHouses']
+            ]);
+        }
+    }
+
+    if (count($resolvedHouses) > 0) {
+        $insCycleHouse = $db->prepare("INSERT INTO application_cycle_houses (application_id, house_id) VALUES (:app_id, :house_id)");
+        foreach ($resolvedHouses as $houseRow) {
+            $insCycleHouse->execute([
+                ':app_id' => $id,
+                ':house_id' => (int)$houseRow['id'],
             ]);
         }
     }

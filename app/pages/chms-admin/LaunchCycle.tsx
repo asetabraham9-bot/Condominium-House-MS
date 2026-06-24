@@ -1,39 +1,62 @@
 import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { useData } from '../../context/DataContext';
+import { useData, type House } from '../../context/DataContext';
 import Layout from '../../components/Layout';
-import { Home, Layers, Rocket, ImagePlus, Plus, Trash2, Calendar, Check, X, Lock, Unlock } from 'lucide-react';
+import { Home, Layers, Rocket, Calendar, X, Lock, Unlock, Plus, Trash2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from 'sonner';
 import { API_BASE_URL } from '../../lib/apiBase';
 
 type CampusRow = { id: string; name: string };
-type HouseConfig = {
+
+type SelectedHouse = {
+  id: string;
+  houseNumber: string;
   houseType: string;
+  blockName?: string;
   campusId: string;
   campusName: string;
   monthlyPayment: number;
-  numberOfHouses: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  electricService?: string;
+  waterService?: string;
 };
 
+function formatHouseTypeLabel(type: string): string {
+  return type.replace(/_/g, ' ');
+}
+
+function toSelectedHouse(house: House): SelectedHouse {
+  return {
+    id: house.id,
+    houseNumber: house.houseNumber,
+    houseType: formatHouseTypeLabel(house.houseType),
+    blockName: house.blockName,
+    campusId: house.campusId ?? '',
+    campusName: house.campusName ?? '—',
+    monthlyPayment: Number(house.monthlyPayment ?? 0),
+    bedrooms: house.bedrooms,
+    bathrooms: house.bathrooms,
+    electricService: house.electricService,
+    waterService: house.waterService,
+  };
+}
 
 export default function LaunchCycle() {
   const { user } = useAuth();
-  const { blocks, housingCycles, refreshData } = useData();
+  const { houses, housingCycles, refreshData } = useData();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [campuses, setCampuses] = useState<CampusRow[]>([]);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  // Multiple house configurations state
-  const [houseConfigurations, setHouseConfigurations] = useState<HouseConfig[]>([]);
-
-  // Selection state for adding house config
-  const [houseType, setHouseType] = useState('Two Bedroom');
-  const [campusId, setCampusId] = useState('');
-  const [monthlyPayment, setMonthlyPayment] = useState('');
-  const [numberOfHouses, setNumberOfHouses] = useState('');
+  const [selectedHouses, setSelectedHouses] = useState<SelectedHouse[]>([]);
+  const [showHousePicker, setShowHousePicker] = useState(false);
+  const [campusFilter, setCampusFilter] = useState('');
+  const [houseSearch, setHouseSearch] = useState('');
+  const [pickerCheckedIds, setPickerCheckedIds] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     title: '',
@@ -70,72 +93,80 @@ export default function LaunchCycle() {
     };
   }, []);
 
-  // Update house overview automatically when configurations change
+  const selectedHouseIds = new Set(selectedHouses.map((h) => h.id));
+
+  const pickerHouses = houses
+    .filter((h) => h.status === 'available' && !selectedHouseIds.has(h.id))
+    .filter((h) => !campusFilter || h.campusId === campusFilter)
+    .filter((h) => {
+      if (!houseSearch.trim()) return true;
+      const q = houseSearch.trim().toLowerCase();
+      return (
+        h.houseNumber.toLowerCase().includes(q) ||
+        (h.blockName ?? '').toLowerCase().includes(q) ||
+        formatHouseTypeLabel(h.houseType).toLowerCase().includes(q) ||
+        (h.campusName ?? '').toLowerCase().includes(q)
+      );
+    });
+
+  // Update house overview automatically when selected houses change
   useEffect(() => {
-    if (houseConfigurations.length === 0) {
+    if (selectedHouses.length === 0) {
       setForm((prev) => ({ ...prev, houseDetails: '' }));
       return;
     }
-    const totalHouses = houseConfigurations.reduce((sum, c) => sum + c.numberOfHouses, 0);
-    const details = houseConfigurations
+
+    const grouped = selectedHouses.reduce<Record<string, { label: string; count: number }>>((acc, house) => {
+      const key = `${house.houseType}|${house.campusId}|${house.monthlyPayment}`;
+      if (!acc[key]) {
+        acc[key] = {
+          label: `${house.houseType} (${house.campusName}): ${house.monthlyPayment.toLocaleString()} ETB/month`,
+          count: 0,
+        };
+      }
+      acc[key].count += 1;
+      return acc;
+    }, {});
+
+    const breakdown = Object.values(grouped)
+      .map((group) => `• ${group.label} — ${group.count} unit(s)`)
+      .join('\n');
+
+    const unitLines = selectedHouses
       .map(
-        (c) =>
-          `• ${c.houseType} (${c.campusName}): ${c.numberOfHouses} units @ ${Number(
-            c.monthlyPayment
-          ).toLocaleString()} ETB/month`
+        (house) =>
+          `• ${house.blockName ?? 'Block'} #${house.houseNumber} — ${house.houseType} (${house.campusName}) @ ${house.monthlyPayment.toLocaleString()} ETB/month | Beds: ${house.bedrooms ?? 0} | Baths: ${house.bathrooms ?? 0} | Power: ${house.electricService ?? '—'} | Water: ${house.waterService ?? '—'}`
       )
       .join('\n');
-    const autoSummary = `Total units launched: ${totalHouses}\nBreakdown:\n${details}`;
+
+    const autoSummary = `Total units launched: ${selectedHouses.length}\nBreakdown:\n${breakdown}\n\nSelected houses:\n${unitLines}`;
     setForm((prev) => ({ ...prev, houseDetails: autoSummary }));
-  }, [houseConfigurations]);
+  }, [selectedHouses]);
 
-  const handleAddConfiguration = () => {
-    if (!houseType) {
-      toast.error('Please select a house type');
-      return;
-    }
-    if (!campusId) {
-      toast.error('Please select a campus');
-      return;
-    }
-    if (!numberOfHouses || Number(numberOfHouses) <= 0) {
-      toast.error('Please enter a valid number of houses');
-      return;
-    }
-    if (!monthlyPayment || Number(monthlyPayment) < 0) {
-      toast.error('Please enter a valid monthly payment');
-      return;
-    }
-
-    const campus = campuses.find((c) => c.id === campusId);
-    const campusName = campus ? campus.name : 'Unknown Campus';
-
-    // Avoid duplicates of the same type and campus
-    const exists = houseConfigurations.some(
-      (c) => c.houseType === houseType && c.campusId === campusId
+  const togglePickerHouse = (houseId: string) => {
+    setPickerCheckedIds((prev) =>
+      prev.includes(houseId) ? prev.filter((id) => id !== houseId) : [...prev, houseId]
     );
-    if (exists) {
-      toast.error('This house type on the selected campus is already added. Remove it first to update.');
-      return;
-    }
-
-    const newConfig: HouseConfig = {
-      houseType,
-      campusId,
-      campusName,
-      monthlyPayment: Number(monthlyPayment),
-      numberOfHouses: Number(numberOfHouses),
-    };
-
-    setHouseConfigurations((prev) => [...prev, newConfig]);
-    // Reset selection fields (keep type & campus as defaults for easier repeat)
-    setMonthlyPayment('');
-    setNumberOfHouses('');
-    toast.success(`Added ${newConfig.houseType} configuration.`);
   };
 
-  const handleRemoveConfiguration = (index: number) => {
-    setHouseConfigurations((prev) => prev.filter((_, i) => i !== index));
+  const handleAddSelectedHouses = () => {
+    if (pickerCheckedIds.length === 0) {
+      toast.error('Select at least one available house');
+      return;
+    }
+
+    const toAdd = houses
+      .filter((h) => pickerCheckedIds.includes(h.id))
+      .map(toSelectedHouse);
+
+    setSelectedHouses((prev) => [...prev, ...toAdd]);
+    setPickerCheckedIds([]);
+    setShowHousePicker(false);
+    toast.success(`Added ${toAdd.length} house(s) to this cycle.`);
+  };
+
+  const handleRemoveSelectedHouse = (houseId: string) => {
+    setSelectedHouses((prev) => prev.filter((house) => house.id !== houseId));
   };
 
   const handleChange = (
@@ -155,8 +186,8 @@ export default function LaunchCycle() {
       toast.error('Application deadline is required');
       return;
     }
-    if (houseConfigurations.length === 0) {
-      toast.error('At least one house configuration is required to launch');
+    if (selectedHouses.length === 0) {
+      toast.error('Select at least one available house to launch this cycle');
       return;
     }
     if (!user?.id) {
@@ -176,7 +207,7 @@ export default function LaunchCycle() {
       fd.append('waterService', form.waterService);
       fd.append('deadline', form.deadline);
       fd.append('launchedBy', user.id);
-      fd.append('houseConfigurations', JSON.stringify(houseConfigurations));
+      fd.append('selectedHouseIds', JSON.stringify(selectedHouses.map((house) => house.id)));
 
       const res = await fetch(`${API_BASE_URL}/applications/launch.php`, {
         method: 'POST',
@@ -199,7 +230,9 @@ export default function LaunchCycle() {
         waterService: 'yes',
         deadline: '',
       });
-      setHouseConfigurations([]);
+      setSelectedHouses([]);
+      setPickerCheckedIds([]);
+      setShowHousePicker(false);
     } catch {
       toast.error('Network error');
     } finally {
@@ -242,7 +275,7 @@ export default function LaunchCycle() {
               Launch Application Cycle
             </h1>
             <p className="text-slate-600 max-w-3xl leading-relaxed">
-              Configure the application round, select campuses, house types, and prices. You can add multiple house offerings in a single round. Launching automatically closes other active rounds.
+              Configure the application round and select actual available houses from inventory. Rent, utilities, and other attributes are taken from each house record automatically.
             </p>
           </div>
 
@@ -338,102 +371,67 @@ export default function LaunchCycle() {
                 <h2 className="text-lg font-semibold">House Setup & Configuration</h2>
               </div>
               <div className="p-6 md:p-8 space-y-6">
-                {/* Selection Fields */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
-                  <h3 className="font-semibold text-slate-800 text-sm uppercase tracking-wide">Add House Offering</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">House Type</label>
-                      <select
-                        value={houseType}
-                        onChange={(e) => setHouseType(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-teal-500 text-sm"
-                      >
-                        <option value="Studio">Studio</option>
-                        <option value="One Bedroom">One Bedroom</option>
-                        <option value="Two Bedroom">Two Bedroom</option>
-                        <option value="Three Bedroom">Three Bedroom</option>
-                      </select>
+                      <h3 className="font-semibold text-slate-800 text-sm uppercase tracking-wide">
+                        Select Houses From Inventory
+                      </h3>
+                      <p className="text-sm text-slate-600 mt-1">
+                        Choose from available houses in the database. Monthly rent, power, and water come from each house record.
+                      </p>
                     </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">Campus</label>
-                      <select
-                        value={campusId}
-                        onChange={(e) => setCampusId(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-teal-500 text-sm"
-                      >
-                        <option value="">Select campus</option>
-                        {campuses.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">Number of Houses</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={numberOfHouses}
-                        onChange={(e) => setNumberOfHouses(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 text-sm"
-                        placeholder="e.g. 10"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">Monthly Payment (ETB)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={monthlyPayment}
-                        onChange={(e) => setMonthlyPayment(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 text-sm"
-                        placeholder="e.g. 2500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end pt-2">
                     <button
                       type="button"
-                      onClick={handleAddConfiguration}
-                      className="px-5 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-semibold text-sm flex items-center gap-1.5 shadow-sm transition-colors"
+                      onClick={() => setShowHousePicker(true)}
+                      className="px-5 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-semibold text-sm flex items-center gap-1.5 shadow-sm transition-colors"
                     >
-                      <Plus className="w-4 h-4" /> Add House Configuration
+                      <Plus className="w-4 h-4" /> Browse Available Houses
                     </button>
                   </div>
+                  <p className="text-xs text-slate-500">
+                    {houses.filter((h) => h.status === 'available').length} available house(s) in inventory ·{' '}
+                    {selectedHouses.length} selected for this cycle
+                  </p>
                 </div>
 
-                {/* Configurations List */}
-                {houseConfigurations.length > 0 ? (
+                {selectedHouses.length > 0 ? (
                   <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                     <table className="w-full text-sm text-left">
                       <thead className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase text-xs">
                         <tr>
-                          <th className="px-4 py-3">House Type</th>
+                          <th className="px-4 py-3">House</th>
+                          <th className="px-4 py-3">Type</th>
                           <th className="px-4 py-3">Campus</th>
-                          <th className="px-4 py-3 text-right">Count</th>
-                          <th className="px-4 py-3 text-right">Monthly Payment</th>
+                          <th className="px-4 py-3 text-right">Rent</th>
+                          <th className="px-4 py-3">Beds/Baths</th>
+                          <th className="px-4 py-3">Power</th>
+                          <th className="px-4 py-3">Water</th>
                           <th className="px-4 py-3 text-center">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200">
-                        {houseConfigurations.map((config, index) => (
-                          <tr key={index} className="hover:bg-slate-50">
-                            <td className="px-4 py-3 font-medium text-slate-900">{config.houseType}</td>
-                            <td className="px-4 py-3 text-slate-600">{config.campusName}</td>
-                            <td className="px-4 py-3 text-right text-slate-900 font-semibold">{config.numberOfHouses}</td>
-                            <td className="px-4 py-3 text-right text-slate-950 font-bold">{config.monthlyPayment.toLocaleString()} ETB</td>
+                        {selectedHouses.map((house) => (
+                          <tr key={house.id} className="hover:bg-slate-50">
+                            <td className="px-4 py-3 font-medium text-slate-900">
+                              {house.blockName ? `${house.blockName} · ` : ''}#{house.houseNumber}
+                            </td>
+                            <td className="px-4 py-3 text-slate-700">{house.houseType}</td>
+                            <td className="px-4 py-3 text-slate-600">{house.campusName}</td>
+                            <td className="px-4 py-3 text-right font-bold text-slate-950">
+                              {house.monthlyPayment.toLocaleString()} ETB
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">
+                              {house.bedrooms ?? 0} / {house.bathrooms ?? 0}
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">{house.electricService ?? '—'}</td>
+                            <td className="px-4 py-3 text-slate-600">{house.waterService ?? '—'}</td>
                             <td className="px-4 py-3 text-center">
                               <button
                                 type="button"
-                                onClick={() => handleRemoveConfiguration(index)}
+                                onClick={() => handleRemoveSelectedHouse(house.id)}
                                 className="text-red-500 hover:text-red-700 p-1"
+                                title="Remove from cycle"
                               >
                                 <Trash2 className="w-4 h-4 inline" />
                               </button>
@@ -445,7 +443,7 @@ export default function LaunchCycle() {
                   </div>
                 ) : (
                   <div className="text-center py-6 text-slate-400 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
-                    No house configurations added yet. Add at least one configuration above.
+                    No houses selected yet. Browse available houses and add them to this cycle.
                   </div>
                 )}
 
@@ -511,6 +509,148 @@ export default function LaunchCycle() {
               </button>
             </div>
           </form>
+
+          {showHousePicker && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+                <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">Available Houses</h3>
+                    <p className="text-sm text-slate-600">
+                      Select one or more available houses to include in this application cycle.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowHousePicker(false);
+                      setPickerCheckedIds([]);
+                    }}
+                    className="p-2 rounded-lg hover:bg-slate-200 text-slate-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="px-6 py-4 border-b border-slate-100 flex flex-col md:flex-row gap-3">
+                  <div className="flex-1 relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={houseSearch}
+                      onChange={(e) => setHouseSearch(e.target.value)}
+                      placeholder="Search by house number, block, type, or campus..."
+                      className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 text-sm"
+                    />
+                  </div>
+                  <select
+                    value={campusFilter}
+                    onChange={(e) => setCampusFilter(e.target.value)}
+                    className="md:w-64 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-teal-500 text-sm"
+                  >
+                    <option value="">All campuses</option>
+                    {campuses.map((campus) => (
+                      <option key={campus.id} value={campus.id}>
+                        {campus.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="overflow-auto flex-1">
+                  {pickerHouses.length > 0 ? (
+                    <table className="w-full text-sm text-left">
+                      <thead className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase text-xs sticky top-0">
+                        <tr>
+                          <th className="px-4 py-3 w-12">
+                            <input
+                              type="checkbox"
+                              checked={
+                                pickerHouses.length > 0 &&
+                                pickerHouses.every((house) => pickerCheckedIds.includes(house.id))
+                              }
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setPickerCheckedIds(pickerHouses.map((house) => house.id));
+                                } else {
+                                  setPickerCheckedIds([]);
+                                }
+                              }}
+                              className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                            />
+                          </th>
+                          <th className="px-4 py-3">House</th>
+                          <th className="px-4 py-3">Type</th>
+                          <th className="px-4 py-3">Campus</th>
+                          <th className="px-4 py-3 text-right">Rent</th>
+                          <th className="px-4 py-3">Beds/Baths</th>
+                          <th className="px-4 py-3">Power</th>
+                          <th className="px-4 py-3">Water</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {pickerHouses.map((house) => (
+                          <tr key={house.id} className="hover:bg-slate-50">
+                            <td className="px-4 py-3">
+                              <input
+                                type="checkbox"
+                                checked={pickerCheckedIds.includes(house.id)}
+                                onChange={() => togglePickerHouse(house.id)}
+                                className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                              />
+                            </td>
+                            <td className="px-4 py-3 font-medium text-slate-900">
+                              {house.blockName ? `${house.blockName} · ` : ''}#{house.houseNumber}
+                            </td>
+                            <td className="px-4 py-3 text-slate-700">{formatHouseTypeLabel(house.houseType)}</td>
+                            <td className="px-4 py-3 text-slate-600">{house.campusName ?? '—'}</td>
+                            <td className="px-4 py-3 text-right font-semibold text-slate-900">
+                              {Number(house.monthlyPayment ?? 0).toLocaleString()} ETB
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">
+                              {house.bedrooms ?? 0} / {house.bathrooms ?? 0}
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">{house.electricService ?? '—'}</td>
+                            <td className="px-4 py-3 text-slate-600">{house.waterService ?? '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="text-center py-16 text-slate-500">
+                      No available houses match your filters, or all matching houses are already selected.
+                    </div>
+                  )}
+                </div>
+
+                <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+                  <p className="text-sm text-slate-600">
+                    {pickerCheckedIds.length} house(s) selected
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowHousePicker(false);
+                        setPickerCheckedIds([]);
+                      }}
+                      className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddSelectedHouses}
+                      disabled={pickerCheckedIds.length === 0}
+                      className="px-5 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 disabled:opacity-50"
+                    >
+                      Add Selected Houses
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Cycles Control List */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
