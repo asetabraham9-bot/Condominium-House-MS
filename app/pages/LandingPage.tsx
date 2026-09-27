@@ -113,7 +113,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-blue-950 mt-20 py-8">
         <div className="container mx-auto px-6 text-center">
-          <p className="text-blue-200">© {currentYear} Wolaita Sodo University - Online Condominium House Management System</p>
+          <p className="text-blue-200">© {currentYear} Wolaita Sodo University - Online Condominium House Management System. All rights reserved.</p>
         </div>
       </footer>
     </div>

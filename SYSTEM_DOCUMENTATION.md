@@ -168,7 +168,7 @@ The Online Condominium House Management System (OCHMS) is a comprehensive web-ba
   id: string
   blockId: string
   houseNumber: string
-  houseType: 'studio' | 'one_bedroom' | 'two_bedroom'
+  houseType: 'studio' | 'one_bedroom' | 'two_bedroom' | 'three_bedroom'
   status: 'available' | 'occupied'
 }
 ```

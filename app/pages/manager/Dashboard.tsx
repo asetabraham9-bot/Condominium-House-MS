@@ -183,7 +183,7 @@ export default function ManagerDashboard() {
               <Users className="w-8 h-8" />
             </div>
             <div>
-              <p className="text-xs text-emerald-500/10 font-bold uppercase tracking-wider text-emerald-50">Active Residents</p>
+              <p className="text-xs text-violet-100 font-bold uppercase tracking-wider">Active Residents</p>
               <p className="text-3xl font-extrabold mt-0.5">{stats.overall.totalActiveResidents}</p>
             </div>
           </div>

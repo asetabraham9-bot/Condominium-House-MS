@@ -11,9 +11,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 include_once '../../config/Database.php';
+include_once '../../config/ApplicantSchema.php';
 
 $database = new Database();
 $db = $database->getConnection();
+
+if ($db) {
+    ensureApplicantSchema($db);
+}
 
 $applicantId = isset($_GET['applicantId']) ? $_GET['applicantId'] : null;
 

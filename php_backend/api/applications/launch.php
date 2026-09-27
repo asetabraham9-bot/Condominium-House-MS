@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 include_once '../../config/Database.php';
+include_once '../../config/LaunchSchema.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -85,6 +86,7 @@ if ($houseDetails === '') {
     $houseDetails = null;
 }
 $deadline = $pick('deadline');
+$deadline = normalizeDeadlineForMysql($deadline);
 
 if ($title === '' || $description === '' || $deadline === '') {
     http_response_code(400);
@@ -167,6 +169,7 @@ $bedrooms = $pickIntNullable('bedrooms');
 $bathrooms = $pickIntNullable('bathrooms');
 
 try {
+    ensureLaunchSchema($db);
     $db->beginTransaction();
 
     $resolvedHouses = [];
@@ -245,6 +248,14 @@ try {
     }
 
     $monthly = $firstConfig ? (float)$firstConfig['monthlyPayment'] : $pickNum('monthlyPayment');
+
+    if ($launchedBy !== null) {
+        $userCheck = $db->prepare('SELECT id FROM users WHERE id = :id LIMIT 1');
+        $userCheck->execute([':id' => $launchedBy]);
+        if (!$userCheck->fetch(PDO::FETCH_ASSOC)) {
+            $launchedBy = null;
+        }
+    }
 
     $close = $db->prepare("UPDATE applications SET status = 'closed' WHERE status = 'open'");
     $close->execute();
@@ -325,5 +336,8 @@ try {
         $db->rollBack();
     }
     http_response_code(503);
-    echo json_encode(["message" => "Unable to launch cycle.", "error" => $e->getMessage()]);
+    echo json_encode([
+        "message" => "Unable to launch cycle. " . $e->getMessage(),
+        "error" => $e->getMessage(),
+    ]);
 }

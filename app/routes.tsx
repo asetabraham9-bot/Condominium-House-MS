@@ -14,8 +14,6 @@ import ManageBlocks from "./pages/campus-admin/ManageBlocks";
 import ManageResidents from "./pages/campus-admin/ManageResidents";
 import VerifyPayments from "./pages/campus-admin/VerifyPayments";
 import ResidentRequests from "./pages/campus-admin/ResidentRequests";
-import ViewFeedback from "./pages/campus-admin/ViewFeedback";
-import ManageRequests from "./pages/campus-admin/ManageRequests";
 import CampusReports from "./pages/campus-admin/Reports";
 import CHMSAdminDashboard from "./pages/chms-admin/Dashboard";
 import ManageApplicants from "./pages/chms-admin/ManageApplicants";

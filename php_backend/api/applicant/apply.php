@@ -8,9 +8,18 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit(); }
 
 include_once '../../config/Database.php';
+include_once '../../config/ApplicantSchema.php';
 
 $database = new Database();
 $db = $database->getConnection();
+
+if (!$db) {
+    http_response_code(503);
+    echo json_encode(["message" => "Database connection failed."]);
+    exit();
+}
+
+ensureApplicantSchema($db);
 
 $data = json_decode(file_get_contents("php://input"));
 

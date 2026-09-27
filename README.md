@@ -44,13 +44,20 @@ OCHMS is designed to replace the manual condominium management process at Wolait
 - 📋 Request handling
 - 📊 Campus-level reporting
 
-### For CHMS Admins
+### For CHMS Admin
 - 👨‍💼 Full applicant management
 - 🎲 Lottery draw execution
 - 🏘️ House placement control
 - 💵 System-wide payment verification
 - 📢 Notification broadcasting
 - 📈 Comprehensive analytics
+- 🌍 Multi-campus management
+
+### For Super/Managerial Admin
+- 👨‍💼 Monitor whole applicants
+- 🎲 Chech the transpancy of lottery excution
+- 🏘️ See each campuses detail info
+- 📈 Control nominated houses
 - 🌍 Multi-campus management
 
 ## 🛠️ Technology Stack
@@ -77,31 +84,34 @@ Access to personal applications, lottery results, and payment management.
 ### 🏫 Campus Admin
 Manages specific campus operations including blocks, residents, and local payments.
 
-### 👑 CHMS Admin
+### 👑 CHMS/System Admin
 Full system access with lottery control, placement authority, and global oversight.
+
+### 👑 SUper/Managerial Admin
+Full system monitor with application control, whole campus management, nomination Monitor, and global oversight.
 
 ## 🏗️ System Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   Landing Page                       │
-└─────────────────────────────────────────────────────┘
-                         │
-            ┌────────────┼────────────┐
-            │            │            │
-            ▼            ▼            ▼
-    ┌──────────┐  ┌──────────┐  ┌──────────┐
-    │Applicant │  │  Campus  │  │   CHMS   │
-    │Dashboard │  │  Admin   │  │  Admin   │
-    └──────────┘  └──────────┘  └──────────┘
-         │              │              │
-         │              │              │
-    ┌────┴────┐    ┌────┴────┐    ┌────┴────┐
-    │Apply    │    │Manage   │    │Lottery  │
-    │Payment  │    │Blocks   │    │Placement│
-    │Lottery  │    │Verify   │    │Reports  │
-    └─────────┘    └─────────┘    └─────────┘
-```
+          ┌─────────────────────────────────────────────────────┐
+          │                  Landing Page                       │
+          └───────────────────────────┐─────────────────────────┘
+                                      |
+                                      ▼
+            ┌────────────-────────────┐────────────────────────┐
+            │            │            │                        |
+            ▼            ▼            ▼                        ▼
+    ┌──────────┐  ┌──────────┐  ┌──────────┐             ┌──────────┐
+    │Applicant │  │  Campus  │  │ System   │             |Manageral |
+    │Dashboard │  │  Admin   │  │  Admin   │             |Admin     | 
+    └──────────┘  └──────────┘  └──────────┘             └──────────┘
+         │              │              │                       |
+         │              │              │                       |
+    ┌────┴────┐    ┌────┴────┐    ┌────┴────┐             ┌────┴────┐
+    │Apply    │    │Manage   │    │Lottery  │             │Monitor  │
+    │Payment  │    │Blocks   │    │Placement│             │whole    │
+    │Lottery  │    │Verify   │    │Reports  │             │system   │
+    └─────────┘    └─────────┘    └─────────┘             └─────────┘
+
 
 ### Key Components
 
@@ -118,33 +128,36 @@ The system uses a weighted formula to rank applicants fairly:
 
 | Criterion | Weight | Max Points | Calculation |
 |-----------|--------|------------|-------------|
-| **Academic Level** | 50% | 50 | Bachelor(25), Masters(35), PhD(45), Professor(50) |
-| **Years of Service** | 25% | 25 | 2.5 points/year, max 10 years |
+| **Academic Level** | 45% | 45 | Bachelor(25), Masters(35), PhD(45), Professor(50) |
+| **Years of Service** | 15% | 15 | 1 point/year, max 10 years |
 | **Job Responsibility** | 15% | 15 | Based on position level |
-| **Marital Status** | 10% | 10 | Married(10), Single(5), Other(7) |
-| **Disability Bonus** | +10% | +10 | Female staff with disabilities |
+| **Marital Status with number of child** | 10% | 10 | Married(3), Single(1), Withchild? depends & 1 point/child |
+| **Is Disable? Type?** | +15% | +15 | Depends on disability type |
+
 
 ### Example Calculation
 
 ```typescript
-Applicant: PhD, 5 years service, Lecturer, Married
-Score = 45 + (5×2.5) + 10 + 10 = 77.5 ≈ 78 points
+Applicant: PhD, 5 years service, Department Head, Married + 2 child, Missed 1 Limb
+Score = 35 + (5×1) + 13 + (3 + 2) + 10 = 68 points
 ```
 
 ## 📸 Screenshots
 
 ### Landing Page
-Modern, informative landing page with system overview and quick access to login/register.
-
-### Applicant Dashboard
-Comprehensive dashboard showing application status, lottery results, and payment history.
-
-### Admin Dashboard
-Full system overview with statistics, pending actions, and quick access to management tools.
-
-### Lottery System
-Fair, transparent lottery draw interface with score-based selection.
-
+![Home Page](./app//assets/screenshot/landingpage.jpeg)
+### Applicant/Resident Dashboard
+![Applicant/Resident Dashboard](./app//assets/screenshot/applicantDashboard.jpeg)
+### Campus Admins Dashboard
+![Campus Admins Dashboard](./app//assets/screenshot/campusAdminDasboard.jpeg)
+### System Admin Dashboard
+![System Admin Dashboard](./app//assets/screenshot/systemAdminDashboard.jpeg)
+### Super/Managerial Admin Dashboard
+![Super/Managerial Admin Dashboard](./app//assets/screenshot/superadminDashboard.jpeg)
+### User Account page
+![User Account page](./app//assets/screenshot/usersaccount.jpeg)
+### Lottery Result Page
+![Lottery Result Page](./app//assets/screenshot/lotterypage.jpeg)
 ## 🗂️ Project Structure
 
 ```
@@ -179,16 +192,16 @@ ochms/
 ## 🧪 Testing
 
 ### Manual Testing Checklist
+### Test Coverage
 
-- [ ] User registration and login
-- [ ] Application submission
-- [ ] Score calculation accuracy
-- [ ] Lottery draw functionality
-- [ ] Payment processing
-- [ ] Notification delivery
-- [ ] Report generation
-- [ ] Role-based access control
+| Test Type       |   Count |       Status        |
+| --------------- | ------: | :-----------------: |
+| Unit Tests      |      24 |     All Passing     |
+| Component Tests |      15 |     All Passing     |
+| E2E Tests       |      6  |     All Passing     |
+| **Total**       |  **45** | **100% Pass Rate** |
 
+---
 ## 🔐 Security Features
 
 - ✅ Password encryption (simulated)
@@ -198,9 +211,17 @@ ochms/
 - ✅ Protected routes
 - ✅ XSS prevention
 
+### Quality Assurance
+
+- **Secret Management** — API keys stored securely in GitHub Secrets
+- **Dependabot** — Automatic dependency updates
+- **Automated Testing** — 45 tests run on every commit
+- **PR Templates** — Standardized pull request format
+- **Issue Templates** — Structured bug reports and feature requests
+
 ## 🌟 Key Highlights
 
-- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Responsive Design**: Works on desktop, tablet
 - **Real-time Updates**: Instant UI updates with state changes
 - **Comprehensive**: All SRS requirements implemented
 - **User-Friendly**: Intuitive interface for all user types
@@ -216,15 +237,61 @@ ochms/
 
 ## 🚧 Future Enhancement
 
-- [ ] Email notification system
-- [ ] SMS notifications
-- [ ] Online payment gateway
-- [ ] Mobile application
-- [ ] Advanced analytics dashboard
-- [ ] Multi-language support
+-  Email notification system
+-  SMS notifications
+-  Online payment gateway
+-  Mobile application
+-  Advanced AI powered analytics dashboard
+-  Multi-language support
+
+## Deployment
+
+The application is not deployed yet but, it's in the middle of approval request of condominium management system managerial sector.
+
+## Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+1. Fork this repository.
+2. Create your feature branch.
+
+```bash
+git checkout -b feature/AdditionalFeature
+```
+
+3. Commit your changes.
+
+```bash
+git commit -m "Add some AdditionalFeature"
+```
+
+4. Push to your branch.
+
+```bash
+git push origin feature/AdditionalFeature
+```
+
+5. Open a Pull Request.
+
+---
+
+## Author
+
+**Asayehu Abraham**
+
+## Acknowledgments
+
+- Built with ❤️ for Wolaita Sodo University.
+- Inspired by the need for online condominium management system in Wolaita Sodo University.
+- Icons provided by **Lucide**.
+- Design inspired by modern SaaS applications.
+- Thanks to the amazing open-source community.
+
+---
+
 ## 📄 License
 
-This project is developed for Wolaita Sodo University.
+This project is developed for Wolaita Sodo University based on only SRS document written an internship period.
 
 ## 👨‍💻 Development Team
 
@@ -232,9 +299,15 @@ Developed based on Software Requirements Specification (SRS) for the Online Cond
 
 ## 📞 Support
 
-For support, email asetabraham9@gmail.com, support@wsu.edu or contact the IT department (phone: +251 964 063 992).
+For support, email asetabraham9@gmail.com, or contact  (phone: +251 964 063 992).
 
 
 **© 2026 Wolaita Sodo University - All Rights Reserved**
 
-Made with ❤️ for efficient condominium management
+<div align="center">
+
+### If you found this project helpful, please consider giving it a star!
+
+Made with CITCS software company by Internship student Asayehu Abraham for Wolaita Sodo University
+
+</div>

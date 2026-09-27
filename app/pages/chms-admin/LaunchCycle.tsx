@@ -186,6 +186,10 @@ export default function LaunchCycle() {
       toast.error('Application deadline is required');
       return;
     }
+    if (!form.description.trim()) {
+      toast.error('Application description is required');
+      return;
+    }
     if (selectedHouses.length === 0) {
       toast.error('Select at least one available house to launch this cycle');
       return;
@@ -213,9 +217,9 @@ export default function LaunchCycle() {
         method: 'POST',
         body: fd,
       });
-      const data = (await res.json().catch(() => ({}))) as { message?: string };
+      const data = (await res.json().catch(() => ({}))) as { message?: string; error?: string };
       if (!res.ok) {
-        toast.error(data.message ?? 'Launch failed');
+        toast.error(data.error ?? data.message ?? 'Launch failed');
         return;
       }
       await refreshData();
